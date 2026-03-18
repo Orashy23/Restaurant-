@@ -1,0 +1,91 @@
+#include "Order.h"
+#include<iostream>
+using namespace std;
+#include <string>
+Order::Order(int id, string type, int price, int size, int timerequest)
+{
+	this->ID = id;
+	this->type = type;
+	this->price = price;
+	this->ordersize = size;
+	this->TQ = timerequest;
+	this->TA = 0;
+	this->TR = 0;
+	this->TS = 0;
+	this->TF = 0;
+}
+
+int Order::getID()
+{
+	return ID;
+}
+int Order::getTQ()
+{
+	return TQ;
+}
+int Order::getSize()
+{
+	return ordersize;
+}
+int Order::getPrice()
+{
+	return price;
+}
+string Order::getType()
+{
+	return type;
+}
+int Order::getSeats()
+{
+	return seats;
+}
+int Order::getDuration()
+{
+	return duration;
+}
+bool Order::getCanShare()
+{
+	return canShare;
+}
+void Order::setTA(int t)
+{
+	TA = t;
+}
+void Order::setTR(int t)
+{
+	TR = t;
+}
+void Order::setTS(int t)
+{
+	TS = t;
+}
+void Order::setTF(int t)
+{
+	TF = t;
+}
+void Order::setDineInInfo(int seats, int duration, bool canShare)
+{
+	this->seats = seats;
+	this->duration = duration;
+	this->canShare = canShare;
+}
+void Order::setDistance(int d)
+{
+	this->distance = d;
+}
+void Order::print()
+{
+	cout << "ID: " << ID << " Type: " << type << " Price: " << price << " Size: " << ordersize;
+
+	if (type == "ODG" || type == "ODN") // dine in
+	{
+		cout << " Seats: " << seats << " Duration: " << duration;
+	}
+	else if (type == "OVC" || type == "OVG" || type == "OVN")  // delivery 
+	{
+		cout << " Distance: " << distance;
+	}
+	cout << endl;
+}
+
+

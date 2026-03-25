@@ -27,3 +27,13 @@ void Table::print()
 		<< " Capacity: " << capacity
 		<< " Free Seats: " << freeSeats << endl;
 }
+
+ostream& operator<<(ostream& os, Table* table)
+{
+	if (table) {
+		os << "Table ID: " << table->ID
+			<< " Capacity: " << table->capacity
+			<< " Free Seats: " << table->freeSeats << endl;
+	}
+	return os;
+}

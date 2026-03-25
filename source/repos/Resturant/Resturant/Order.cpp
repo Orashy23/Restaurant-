@@ -88,4 +88,22 @@ void Order::print()
 	cout << endl;
 }
 
+ostream& operator<<(ostream& os, Order* order)
+{
+	if (order) {
+		os << "ID: " << order->ID << " Type: " << order->type << " Price: " << order->price << " Size: " << order->ordersize;
+
+		if (order->type == "ODG" || order->type == "ODN") // dine in
+		{
+			os << " Seats: " << order->seats << " Duration: " << order->duration;
+		}
+		else if (order->type == "OVC" || order->type == "OVG" || order->type == "OVN")  // delivery 
+		{
+			os << " Distance: " << order->distance;
+		}
+		os << endl;
+	}
+	return os;
+}
+
 

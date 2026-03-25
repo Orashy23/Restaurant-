@@ -33,12 +33,8 @@ public:
 
 	void print();
 
-	
-		
-	
-	
-
-
+	friend ostream& operator<<(ostream& os, Order* order);
 
 };
+
 

@@ -36,3 +36,9 @@ void Chef::print()
 	cout << "Chef: " << (is_special? "Special" : "Normal") << ", Speed: " << speed 
 	<< " Status: " << (is_free ? "Free" : "Busy") << endl;
 }
+
+ostream& operator<<(ostream& out, const Chef& c)
+{
+out << "Chef: " << (c.is_special ? "Special" : "Normal") << ", Speed: " << c.speed
+<< " Status: " << (c.is_free ? "Free" : "Busy") << endl;
+}

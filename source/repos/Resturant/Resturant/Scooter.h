@@ -22,5 +22,6 @@ public:
 	void print();
 	bool needsMaintenance();
 	void AfterMaintenance();
+	friend ostream& operator<<(ostream& out, const Scooter& s);
 };
 

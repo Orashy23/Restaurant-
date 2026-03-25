@@ -2,6 +2,9 @@
 #include<iostream>
 using namespace std;
 #include <string>
+
+
+
 Scooter::Scooter(int Id, int speed, int maintananceTime, int mainorder)
 {
 	this->ID = Id;
@@ -30,6 +33,15 @@ int Scooter::getOrderCounter()
 {
 	return ordercounter;
 }
+void Scooter::setID(int Id)
+{
+	this->ID = Id;
+}
+void Scooter::setSpeed(int speed)
+{
+	this->speed = speed;
+}
+
 
 void Scooter::setMaintananceTime(int maintananceTime)
 {
@@ -58,4 +70,11 @@ void Scooter::print()
 	cout << "Scooter ID: " << ID
 		<< " Speed: " << speed
 		<< " Orders Served: " << ordercounter << endl;
+}
+
+ostream& operator<<(ostream& out, const Scooter& s)
+{
+	out << "Scooter ID: " << s.ID
+		<< " Speed: " << s.speed
+		<< " Orders Served: " << s.ordercounter << endl;
 }

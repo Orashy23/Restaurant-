@@ -17,5 +17,6 @@ public:
 	void setIsSpecial(bool is_special);
 	void setSpeed(int speed);
 	void print();
+	friend ostream& operator<<(ostream& out, const Chef& c);
 };
 

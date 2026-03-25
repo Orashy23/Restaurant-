@@ -72,9 +72,10 @@ void Scooter::print()
 		<< " Orders Served: " << ordercounter << endl;
 }
 
-ostream& operator<<(ostream& out, const Scooter& s)
+ostream& operator<<(ostream& out, const Scooter* s)
 {
-	out << "Scooter ID: " << s.ID
-		<< " Speed: " << s.speed
-		<< " Orders Served: " << s.ordercounter << endl;
+	out << "Scooter ID: " << s->ID
+		<< " Speed: " << s->speed
+		<< " Orders Served: " << s->ordercounter << endl;
+	return out;
 }

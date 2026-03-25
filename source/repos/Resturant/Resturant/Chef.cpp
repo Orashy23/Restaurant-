@@ -37,8 +37,9 @@ void Chef::print()
 	<< " Status: " << (is_free ? "Free" : "Busy") << endl;
 }
 
-ostream& operator<<(ostream& out, const Chef& c)
+ostream& operator<<(ostream& out, const Chef* c)
 {
-out << "Chef: " << (c.is_special ? "Special" : "Normal") << ", Speed: " << c.speed
-<< " Status: " << (c.is_free ? "Free" : "Busy") << endl;
+out << "Chef: " << (c->is_special ? "Special" : "Normal") << ", Speed: " << c->speed
+<< " Status: " << (c->is_free ? "Free" : "Busy") << endl;
+return out;
 }

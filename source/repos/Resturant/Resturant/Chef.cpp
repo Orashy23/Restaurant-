@@ -39,7 +39,12 @@ void Chef::print()
 
 ostream& operator<<(ostream& out, const Chef* c)
 {
-out << "Chef: " << (c->is_special ? "Special" : "Normal") << ", Speed: " << c->speed
-<< " Status: " << (c->is_free ? "Free" : "Busy") << endl;
-return out;
+	out << c->getID();
+	return out;
 }
+
+bool setis_special(bool is_special)
+{
+	this->is_special = is_special;
+}
+

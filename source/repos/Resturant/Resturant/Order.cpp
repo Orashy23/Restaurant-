@@ -73,6 +73,10 @@ void Order::setDistance(int d)
 {
 	this->distance = d;
 }
+int Order::getDistance()
+{
+	return distance;
+}
 void Order::print()
 {
 	cout << "ID: " << ID << " Type: " << type << " Price: " << price << " Size: " << ordersize;

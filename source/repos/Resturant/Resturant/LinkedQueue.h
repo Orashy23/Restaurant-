@@ -60,6 +60,8 @@ public :
 	bool enqueue(const T& newEntry);
 	bool dequeue(T& frntEntry);  
 	bool peek(T& frntEntry)  const;	
+	void print() const; 
+	int getcount() const; //returns the number of items in the queue
 	~LinkedQueue();
 
 	//copy constructor
@@ -167,6 +169,40 @@ bool LinkedQueue<T>:: peek(T& frntEntry) const
 
 }
 ///////////////////////////////////////////////////////////////////////////////////
+/*
+* Function: print
+* Prints the contents of the queue from front to back.(gharbawy)
+*/
+template <typename T>
+void LinkedQueue<T>::print() const
+{
+	Node<T>* current = frontPtr;
+	while (current != nullptr)
+	{
+		cout << current->getItem() << " ";
+		current = current->getNext();
+	}
+	cout << endl;
+}
+
+/*
+* Function: getcount (gharbawy)
+* Returns the number of items in the queue.	
+*/
+template <typename T>	
+int LinkedQueue<T>::getcount() const
+{
+	int count = 0;
+	Node<T>* current = frontPtr;
+	while (current != nullptr)
+	{
+		count++;
+		current = current->getNext();
+	}
+	return count;
+}
+
+
 /*
 Function: destructor
 removes all nodes from the queue by dequeuing them

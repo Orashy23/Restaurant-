@@ -38,3 +38,5 @@
 /.vs/Restaurant-/FileContentIndex/e6a941a4-df88-42c1-951e-7ab05a6d0ffe.vsidx
 /.vs/Restaurant-/FileContentIndex/683adce5-3907-4704-a70a-2cbb2284ad19.vsidx
 /.vs/Restaurant-/FileContentIndex/ae2ae97e-7987-460a-bc88-43c7b42c1c1a.vsidx
+*.vsidx
+*.ipch

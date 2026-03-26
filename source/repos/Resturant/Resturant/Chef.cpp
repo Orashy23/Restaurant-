@@ -34,7 +34,7 @@ void Chef::setIsFree(bool status)
 void Chef::print()
 {
 	cout << "Chef: " << (is_special? "Special" : "Normal") << ", Speed: " << speed 
-	<< " Status: " << (is_free ? "Free" : "Busy") << endl;
+	<< " Status: " << (is_free ? "Free" : "Busy") ;
 }
 
 ostream& operator<<(ostream& out, const Chef* c)
@@ -43,8 +43,8 @@ ostream& operator<<(ostream& out, const Chef* c)
 	return out;
 }
 
-bool setis_special(bool is_special)
-{
-	this->is_special = is_special;
+void Chef::setIsSpecial(bool special)
+{ 
+	is_special = special;
 }
 

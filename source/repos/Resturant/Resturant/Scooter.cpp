@@ -2,6 +2,7 @@
 #include<iostream>
 using namespace std;
 #include <string>
+#include "Chef.h"
 
 
 
@@ -37,6 +38,7 @@ void Scooter::setID(int Id)
 {
 	this->ID = Id;
 }
+
 void Scooter::setSpeed(int speed)
 {
 	this->speed = speed;
@@ -69,7 +71,7 @@ void Scooter::print()
 {
 	cout << "Scooter ID: " << ID
 		<< " Speed: " << speed
-		<< " Orders Served: " << ordercounter << endl;
+		<< " Orders Served: " << ordercounter <<;
 }
 
 ostream& operator<<(ostream& out, const Scooter* s)

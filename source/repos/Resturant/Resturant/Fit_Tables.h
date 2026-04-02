@@ -44,7 +44,7 @@ public:
         }
         cout << endl;
     }
-    }
+    
     int getcount() const { 
         priNode<Table*>* current = head;
 		int count = 0;

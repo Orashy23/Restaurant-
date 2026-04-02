@@ -127,25 +127,34 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Restaurant-\LinkedList.h" />
-    <ClInclude Include="..\..\Restaurant-\LinkedQueue.h" />
-    <ClInclude Include="..\..\Restaurant-\nArrayStack.h" />
-    <ClInclude Include="..\..\Restaurant-\Node.h" />
-    <ClInclude Include="..\..\Restaurant-\priNode.h" />
-    <ClInclude Include="..\..\Restaurant-\priQueue.h" />
-    <ClInclude Include="..\..\Restaurant-\QueueADT.h" />
-    <ClInclude Include="..\..\Restaurant-\StackADT.h" />
+    <ClInclude Include="Action.h" />
+    <ClInclude Include="ArrayStack.h" />
     <ClInclude Include="Chef.h" />
+    <ClInclude Include="Cook_Ords.h" />
+    <ClInclude Include="Fit_Tables.h" />
+    <ClInclude Include="LinkedQueue.h" />
+    <ClInclude Include="Node.h" />
     <ClInclude Include="Order.h" />
+    <ClInclude Include="Pend_OVC.h" />
+    <ClInclude Include="priNode.h" />
+    <ClInclude Include="priQueue.h" />
+    <ClInclude Include="QueueADT.h" />
+    <ClInclude Include="RDY_OV.h" />
+    <ClInclude Include="RequestAction.h" />
+    <ClInclude Include="Restaurant.h" />
     <ClInclude Include="Scooter.h" />
+    <ClInclude Include="StackADT.h" />
     <ClInclude Include="Table.h" />
+    <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Restaurant-\Main.cpp" />
     <ClCompile Include="Chef.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="Order.cpp" />
+    <ClCompile Include="Restaurant.cpp" />
     <ClCompile Include="Scooter.cpp" />
     <ClCompile Include="Table.cpp" />
+    <ClCompile Include="UI.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

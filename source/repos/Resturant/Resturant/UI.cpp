@@ -24,7 +24,7 @@ int UI::getMode()
 	{
 		cout << "/////////////////////\n" << "Entering interactive mode\n";
 	}
-	else if ()
+	else if (mode==2)
 	{
 		cout << "/////////////////////\n" << "Entering silent mode\n";
 	}
@@ -58,21 +58,30 @@ void UI::printCurrentTimestep(int timestep, Restaurant* pRest)
 	cout << "Actions List\n";
 
 	cout << "\n========= Pending Orders =========\n";
-	// pRest->getPend_ODN()->print();
-	// pRest->getPend_OVG()->print(); 
-	// pRest->getPend_OVC()->print();
+	 pRest->getPend_ODN()->print();
+	 pRest->getPend_OVG()->print(); 
+	 pRest->getPend_OVC()->print();
 
 
 	// 3. Available Chefs
 	cout << "\n========= Available Chefs =========\n";
 
-	
+	cout << "Normal Chefs: \n";
+	pRest->getFree_CN()->print();
+	cout << "Special Chefs: \n";
+	pRest->getFree_CS()->print();
 
 	// 4. Cooking Orders
 	cout << "\n========= Cooking Orders =========\n";
+	cout << "Cooking Orders: \n";
+	pRest->getCooking_Orders()->print();
 
 	// 5. Ready Orders
 	cout << "\n========= Ready Orders =========\n";
+
+	pRest->getRDY_OT()->print();
+	pRest->getRDY_OD()->print();
+	pRest->
 
 	// 6. Available Scooters
 	cout << "\n========= Available Scooters =========\n";

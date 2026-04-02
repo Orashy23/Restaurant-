@@ -69,8 +69,9 @@ public:
 
     void print() const {
         priNode<T>* current = head;
+        int tempPri;
         while (current != nullptr) {
-            cout << current->getItem();
+            cout << current->getItem(tempPri);
             current = current->getNext();
             if (current != nullptr) {
                 cout << ", ";

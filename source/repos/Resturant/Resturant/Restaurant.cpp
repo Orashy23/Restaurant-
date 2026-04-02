@@ -46,10 +46,10 @@ void Restaurant::ExecuteActions(int currentTimestep)
         delete pact; // Clean up memory after execution
 	}
 
-    while (Cancel_Action.peek(pact) && pact->getTime == currentTimestep)
+    while (Cancel_Action.peek(pact) && pact->getTime() == currentTimestep)
     {
         Cancel_Action.dequeue(pact);
-        pAct->act(this); 
+        pact->act(this); 
         delete pact;
     }
 
@@ -76,6 +76,7 @@ void Restaurant::CancelOrder(int id)
 Restaurant::~Restaurant()
 {
 	Order* pOrd;
+	int pri;
 	while (Pend_ODN.dequeue(pOrd))
 		delete pOrd;
 	while (Pend_ODG.dequeue(pOrd))
@@ -86,9 +87,9 @@ Restaurant::~Restaurant()
 		delete pOrd;
 	while (Pend_OVC_List.dequeue(pOrd))
 		delete pOrd;
-	while (Pend_OVG.dequeue(pOrd))
+	while (Pend_OVG.dequeue(pOrd, pri))
 		delete pOrd;
-	while (Cooking_Orders.dequeue(pOrd))
+	while (Cooking_Orders.dequeue(pOrd,pri))
 		delete pOrd;
 	while (Ready_OV_List.dequeue(pOrd))
 		delete pOrd;
@@ -96,7 +97,7 @@ Restaurant::~Restaurant()
 		delete pOrd;
 	while (Finished_Orders.pop(pOrd))
 		delete pOrd;
-    while(Cooking_Orders.dequeue(pOrd))
+    while(Cooking_Orders.dequeue(pOrd , pri ))
 		delete pOrd;
 	while (Ready_OV_List.dequeue(pOrd))
 		delete pOrd;

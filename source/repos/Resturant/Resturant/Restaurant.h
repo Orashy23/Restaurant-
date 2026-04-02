@@ -65,6 +65,51 @@ public:
     void AddtoPendingList(Order* pOrd);
     void ExecuteActions(int currentTimestep);
 	void CancelOrder(int id);
+    // ==========================================
+    // --- Getters for UI Printing ---
+    // ==========================================
+
+    // 1. Actions Lists
+    LinkedQueue<Action*>* getRequestActions() { return &Request_Actions; }
+    LinkedQueue<Action*>* getCancelActions() { return &Cancel_Actions; }
+
+    // 2. Pending Orders
+    LinkedQueue<Order*>* getPend_ODG() { return &Pend_ODG; }
+    LinkedQueue<Order*>* getPend_ODN() { return &Pend_ODN; }
+    LinkedQueue<Order*>* getPend_OT() { return &Pend_OT; }
+    LinkedQueue<Order*>* getPend_OVN() { return &Pend_OVN; }
+    priQueue<Order*>* getPend_OVG() { return &Pend_OVG; }
+    Pend_OVC* getPend_OVC() { return &Pend_OVC_List; }
+
+    // 3. Available Chefs
+    LinkedQueue<Chef*>* getFree_CS() { return &Free_CS; }
+    LinkedQueue<Chef*>* getFree_CN() { return &Free_CN; }
+
+    // 4. Tables
+    Fit_Tables* getFree_Tables() { return &Free_Tables; }
+    Fit_Tables* getBusy_Sharable() { return &Busy_Sharable; }
+    Fit_Tables* getBusy_No_Share() { return &Busy_No_Share; }
+
+    // 5. In-Execution / Served
+    Cook_Ords* getCooking_Orders() { return &Cooking_Orders; }
+    priQueue<Order*>* getInServ_Orders() { return &InServ_Orders; }
+
+    // 6. Ready Orders
+    LinkedQueue<Order*>* getRDY_OD() { return &RDY_OD; }
+    LinkedQueue<Order*>* getRDY_OT() { return &RDY_OT; }
+    RDY_OV* getReady_OV() { return &Ready_OV_List; }
+
+    // 7. Scooters
+    priQueue<Scooter*>* getFree_Scooters() { return &Free_Scooters; }
+    priQueue<Scooter*>* getBack_Scooters() { return &Back_Scooters; }
+    LinkedQueue<Scooter*>* getMaint_Scooters() { return &Maint_Scooters; }
+
+    // 8. Finished / Cancelled
+    LinkedQueue<Order*>* getCancelled_orders() { return &Cancelled_orders; }
+    ArrayStack<Order*>* getFinished_Orders() { return &Finished_Orders; }
+
+
+
 	// simulation function
     void randomSimulate();
 };

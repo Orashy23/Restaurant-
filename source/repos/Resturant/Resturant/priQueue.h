@@ -3,7 +3,6 @@
 #include <iostream>
 using namespace std;
 
-
 //This class impelements the priority queue as a sorted list (Linked List)
 //The item with highest priority is at the front of the queue
 template <typename T>
@@ -72,7 +71,7 @@ public:
 
     void print() const {
         priNode<T>* current = head;
-        int tempPri;
+        int tempPri=0;
         while (current != nullptr) {
             cout << current->getItem(tempPri);
             current = current->getNext();

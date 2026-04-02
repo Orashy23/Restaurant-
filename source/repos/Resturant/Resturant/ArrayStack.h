@@ -59,14 +59,23 @@ public:
 		return true;
 	}  // end peek
 
+
+	int getcount() const
+	{
+		return top + 1;
+	}
+
 	void print() const
 	{
 		for (int i = top; i >= 0; i--)
-			cout << items[i] << " ";
-		cout << endl;
-	}
+		{
+			cout << items[i];
 
-	int getCount() const { return top + 1; }
+			if (i > 0) {
+				cout << ", ";
+			}
+		}
+	}
 
 }; // end ArrayStack
 

@@ -67,8 +67,7 @@ public :
 
 	//copy constructor
 	LinkedQueue(const LinkedQueue<T> & LQ);
-	int getCount() const;
-	void print() const;
+
 };
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -183,7 +182,7 @@ void LinkedQueue<T>::print() const
 	Node<T>* current = frontPtr;
 	while (current != nullptr)
 	{
-		cout << current->getItem() << " ";
+		cout << current->getItem() << " ";4
 		current = current->getNext();
 	}
 	cout << endl;
@@ -196,13 +195,6 @@ void LinkedQueue<T>::print() const
 template <typename T>	
 int LinkedQueue<T>::getcount() const
 {
-	int count = 0;
-	Node<T>* current = frontPtr;
-	while (current != nullptr)
-	{
-		count++;
-		current = current->getNext();
-	}
 	return count;
 }
 

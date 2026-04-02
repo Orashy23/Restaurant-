@@ -18,7 +18,7 @@ public:
         int p;
         while (dequeue(tmp,p));
     }
-
+     
     //insert the new node in its correct position according to its priority
     void enqueue(const T& data, int priority) {
         priNode<T>* newNode = new priNode<T>(data, priority);

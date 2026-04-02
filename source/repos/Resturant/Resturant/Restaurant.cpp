@@ -45,6 +45,14 @@ void Restaurant::ExecuteActions(int currentTimestep)
         pact->act(this);
         delete pact; // Clean up memory after execution
 	}
+
+    while (Cancel_Action.peek(pact) && pact->getTime == currentTimestep)
+    {
+        Cancel_Action.dequeue(pact);
+        pAct->act(this); 
+        delete pact;
+    }
+
 }
 void Restaurant::CancelOrder(int id)
 {

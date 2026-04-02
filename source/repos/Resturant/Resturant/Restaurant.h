@@ -65,4 +65,6 @@ public:
     void AddtoPendingList(Order* pOrd);
     void ExecuteActions(int currentTimestep);
 	void CancelOrder(int id);
+	// simulation function
+    void randomSimulate();
 };

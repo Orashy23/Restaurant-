@@ -74,7 +74,7 @@ void Restaurant::randomSimulate()
             pOrd->setDistance(rand() % 900 + 100);
         AddtoPendingList(pOrd);
     }
-}
+
 
     LinkedQueue<Chef*>    Busy_Chefs;
     LinkedQueue<Scooter*> InUse_Scooters;

@@ -24,7 +24,7 @@ int UI::getMode()
 	{
 		cout << "/////////////////////\n" << "Entering interactive mode\n";
 	}
-	else if ()
+	else if (mode == 2)
 	{
 		cout << "/////////////////////\n" << "Entering silent mode\n";
 	}
@@ -46,9 +46,9 @@ void UI::printMsg(string msg)
 
 void UI::waitForClick()
 {
-
-
-
+	cout << "\nPress Enter to move to next timestep...";
+	cin.ignore();
+	cin.get();
 }
 
 void UI::printCurrentTimestep(int timestep, Restaurant* pRest)

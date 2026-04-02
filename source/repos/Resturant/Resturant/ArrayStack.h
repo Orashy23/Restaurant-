@@ -9,12 +9,14 @@
 #define ARRAY_STACK_
 
 #include "StackADT.h"
+#include <iostream>
+using namespace std;
 
 //Unless spesificed by the stack user, the default size is 100
 template<typename T>
 class ArrayStack : public StackADT<T>
 {
-	enum { MAX_SIZE = 100 };
+	enum { MAX_SIZE = 1000 };
 protected:  //in case you need to inherit for the project
 	T items[MAX_SIZE];		// Array of stack items
 	int top;                   // Index to top of stack
@@ -56,6 +58,15 @@ public:
 		TopEntry = items[top];		 
 		return true;
 	}  // end peek
+
+	void print() const
+	{
+		for (int i = top; i >= 0; i--)
+			cout << items[i] << " ";
+		cout << endl;
+	}
+
+	int getCount() const { return top + 1; }
 
 }; // end ArrayStack
 

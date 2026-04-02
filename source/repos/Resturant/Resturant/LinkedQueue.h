@@ -182,7 +182,7 @@ void LinkedQueue<T>::print() const
 	Node<T>* current = frontPtr;
 	while (current != nullptr)
 	{
-		cout << current->getItem() << " ";4
+		cout << current->getItem() << " ";
 		current = current->getNext();
 	}
 	cout << endl;

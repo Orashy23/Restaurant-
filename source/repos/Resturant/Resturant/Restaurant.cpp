@@ -50,7 +50,7 @@ void Restaurant::randomSimulate()
 {
     srand((unsigned int)time(0));
 
-    for (int i = 1;  i <= 10; i++) Free_CS.enqueue(new Chef(i, true,  2));
+    for (int i = 1; i <= 10; i++) Free_CS.enqueue(new Chef(i, true, 2));
     for (int i = 11; i <= 25; i++) Free_CN.enqueue(new Chef(i, false, 3));
 
     int tid = 1;
@@ -73,6 +73,7 @@ void Restaurant::randomSimulate()
             pOrd->setDistance(rand() % 900 + 100);
         AddtoPendingList(pOrd);
     }
+}
 
 
 Restaurant::~Restaurant()

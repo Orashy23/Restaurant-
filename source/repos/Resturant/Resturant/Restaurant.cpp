@@ -8,6 +8,7 @@
 #include <cstdlib>
 #include <ctime>
 using namespace std;
+//123
 
 Restaurant::Restaurant()
 {}
@@ -75,41 +76,158 @@ void Restaurant::randomSimulate()
     }
 }
 
+    LinkedQueue<Chef*>    Busy_Chefs;
+    LinkedQueue<Scooter*> InUse_Scooters;
+    int done = 0, ts = 1;
+
+    while (done < totalOrders) {
+        for (int i = 0; i < 30; i++) {
+            Order* pOrd = nullptr; bool got = false;
+            int lc = rand() % 6;
+            for (int a = 0; a < 6 && !got; a++) {
+                int l = (lc+a)%6, p;
+                if      (l==0 && !Pend_ODG.isEmpty())      { Pend_ODG.dequeue(pOrd);      got=true; }
+                else if (l==1 && !Pend_ODN.isEmpty())      { Pend_ODN.dequeue(pOrd);      got=true; }
+                else if (l==2 && !Pend_OT.isEmpty())       { Pend_OT.dequeue(pOrd);       got=true; }
+                else if (l==3 && !Pend_OVN.isEmpty())      { Pend_OVN.dequeue(pOrd);      got=true; }
+                else if (l==4 && !Pend_OVC_List.isEmpty()) { Pend_OVC_List.dequeue(pOrd); got=true; }
+                else if (l==5 && !Pend_OVG.isEmpty())      { Pend_OVG.dequeue(pOrd,p);   got=true; }
+            }
+            if (!got) break;
+            Chef* pChef = nullptr;
+            if (rand()%2==0 && !Free_CS.isEmpty()) Free_CS.dequeue(pChef);
+            else if (!Free_CN.isEmpty())           Free_CN.dequeue(pChef);
+            else if (!Free_CS.isEmpty())           Free_CS.dequeue(pChef);
+            if (!pChef) { AddtoPendingList(pOrd); break; }
+            pChef->setIsFree(false);
+            Busy_Chefs.enqueue(pChef);
+            Cooking_Orders.enqueue(pOrd, pOrd->getSize());
+        }
+
+        for (int i = 0; i < 15; i++) {
+            if (rand()%100 >= 75) continue;
+            if (Cooking_Orders.isEmpty()) break;
+            Order* pOrd; int p;
+            Cooking_Orders.dequeue(pOrd, p);
+            Chef* pChef;
+            if (Busy_Chefs.dequeue(pChef)) {
+                pChef->setIsFree(true);
+                if (pChef->getIsSpecial()) Free_CS.enqueue(pChef);
+                else Free_CN.enqueue(pChef);
+            }
+            string t = pOrd->getType();
+            if (t=="ODG"||t=="ODN") RDY_OD.enqueue(pOrd);
+            else if (t=="OT")       RDY_OT.enqueue(pOrd);
+            else                    Ready_OV_List.enqueue(pOrd);
+        }
+
+        for (int i = 0; i < 10; i++) {
+            Order* pOrd = nullptr; bool got = false;
+            int lc = rand() % 3;
+            for (int a = 0; a < 3 && !got; a++) {
+                int l = (lc+a)%3;
+                if      (l==0 && !RDY_OD.isEmpty())        { RDY_OD.dequeue(pOrd);        got=true; }
+                else if (l==1 && !RDY_OT.isEmpty())        { RDY_OT.dequeue(pOrd);        got=true; }
+                else if (l==2 && !Ready_OV_List.isEmpty()) { Ready_OV_List.dequeue(pOrd); got=true; }
+            }
+            if (!got) break;
+            string t = pOrd->getType();
+            if (t=="OT") { Finished_Orders.push(pOrd); done++; }
+            else if (t=="OVN"||t=="OVC"||t=="OVG") {
+                Scooter* ps; int sp;
+                if (!Free_Scooters.isEmpty()) {
+                    Free_Scooters.dequeue(ps,sp); ps->increaseOderCounter(); InUse_Scooters.enqueue(ps);
+                }
+                InServ_Orders.enqueue(pOrd, rand()%20+1);
+            }
+            else {
+                int seats = pOrd->getSeats(); if (seats==0) seats=2;
+                Table* pt = Free_Tables.getBest(seats);
+                if (pt) Busy_No_Share.addTable(pt);
+                InServ_Orders.enqueue(pOrd, rand()%20+1);
+            }
+        }
+
+        { int id=rand()%totalOrders+1; Order* po; if(Pend_OVC_List.Cancel_Order(id,po)){Cancelled_orders.enqueue(po);done++;} }
+        { int id=rand()%totalOrders+1; Order* po; if(Ready_OV_List.CancelOrder(id,po)){Cancelled_orders.enqueue(po);done++;} }
+        {
+            int id=rand()%totalOrders+1; Order* po;
+            if(Cooking_Orders.CancelOrder(id,po)){
+                Chef* pc;
+                if(Busy_Chefs.dequeue(pc)){pc->setIsFree(true); if(pc->getIsSpecial())Free_CS.enqueue(pc); else Free_CN.enqueue(pc);}
+                Cancelled_orders.enqueue(po); done++;
+            }
+        }
+
+        if (rand()%100<25 && !InServ_Orders.isEmpty()) {
+            Order* po; int p; InServ_Orders.dequeue(po,p);
+            string t = po->getType();
+            if (t=="OVN"||t=="OVC"||t=="OVG") {
+                Scooter* ps; if(InUse_Scooters.dequeue(ps)) Back_Scooters.enqueue(ps,ps->getSpeed());
+            } else if (t=="ODG"||t=="ODN") {
+                Table* pt; int tp;
+                if(!Busy_No_Share.isEmpty()){Busy_No_Share.dequeue(pt,tp); Free_Tables.addTable(pt);}
+            }
+            Finished_Orders.push(po); done++;
+        }
+
+        if (rand()%100<50 && !Back_Scooters.isEmpty()) {
+            Scooter* ps; int p; Back_Scooters.dequeue(ps,p);
+            if(ps->needsMaintenance()) Maint_Scooters.enqueue(ps);
+            else Free_Scooters.enqueue(ps, ps->getSpeed());
+        }
+
+        if (rand()%100<50 && !Maint_Scooters.isEmpty()) {
+            Scooter* ps; Maint_Scooters.dequeue(ps);
+            ps->AfterMaintenance(); Free_Scooters.enqueue(ps, ps->getSpeed());
+        }
+
+        cout << "\n===== TIMESTEP " << ts << " ===== " << done << "/" << totalOrders << "\n";
+        cout << "\n-- Pending --\n";
+        cout << "ODG(" << Pend_ODG.getcount()      << "): "; Pend_ODG.print();
+        cout << "ODN(" << Pend_ODN.getcount()      << "): "; Pend_ODN.print();
+        cout << "OT (" << Pend_OT.getcount()       << "): "; Pend_OT.print();
+        cout << "OVN(" << Pend_OVN.getcount()      << "): "; Pend_OVN.print();
+        cout << "OVC(" << Pend_OVC_List.getcount() << "): "; Pend_OVC_List.print();
+        cout << "OVG(" << Pend_OVG.getCount()      << "): "; Pend_OVG.print(); cout << "\n";
+        cout << "\n-- Chefs --\n";
+        cout << "CS(" << Free_CS.getcount() << "): "; Free_CS.print();
+        cout << "CN(" << Free_CN.getcount() << "): "; Free_CN.print();
+        cout << "\n-- Cooking(" << Cooking_Orders.getCount() << ") --\n"; Cooking_Orders.print(); cout << "\n";
+        cout << "\n-- Ready --\n";
+        cout << "OD(" << RDY_OD.getcount()        << "): "; RDY_OD.print();
+        cout << "OT(" << RDY_OT.getcount()        << "): "; RDY_OT.print();
+        cout << "OV(" << Ready_OV_List.getcount() << "): "; Ready_OV_List.print();
+        cout << "\n-- Scooters --\n";
+        cout << "Free("  << Free_Scooters.getCount()  << "): "; Free_Scooters.print();  cout << "\n";
+        cout << "Back("  << Back_Scooters.getCount()  << "): "; Back_Scooters.print();  cout << "\n";
+        cout << "Maint(" << Maint_Scooters.getcount() << "): "; Maint_Scooters.print();
+        cout << "\n-- Tables --\n";
+        cout << "Free(" << Free_Tables.getcount()   << "): "; Free_Tables.print();
+        cout << "Busy(" << Busy_No_Share.getcount() << "): "; Busy_No_Share.print();
+        cout << "\n-- InService(" << InServ_Orders.getCount() << ") --\n"; InServ_Orders.print(); cout << "\n";
+        cout << "\n-- Cancelled(" << Cancelled_orders.getcount() << ") --\n"; Cancelled_orders.print();
+        cout << "\n-- Finished("  << Finished_Orders.getcount()  << ") --\n"; Finished_Orders.print();
+        cout << "\nPress Enter..."; cin.get();
+        ts++;
+    }
+    cout << "\n=== Done in " << ts-1 << " timesteps. Finished:" << Finished_Orders.getcount()
+         << " Cancelled:" << Cancelled_orders.getcount() << " ===\n";
+}
 
 Restaurant::~Restaurant()
 {
-	Order* pOrd;
-	int pri;
-	while (Pend_ODN.dequeue(pOrd))
-		delete pOrd;
-	while (Pend_ODG.dequeue(pOrd))
-		delete pOrd;
-	while (Pend_OT.dequeue(pOrd))
-		delete pOrd;
-	while (Pend_OVN.dequeue(pOrd))
-		delete pOrd;
-	while (Pend_OVC_List.dequeue(pOrd))
-		delete pOrd;
-	while (Pend_OVG.dequeue(pOrd, pri))
-		delete pOrd;
-	while (Cooking_Orders.dequeue(pOrd,pri))
-		delete pOrd;
-	while (Ready_OV_List.dequeue(pOrd))
-		delete pOrd;
-	while (Cancelled_orders.dequeue(pOrd))
-		delete pOrd;
-	while (Finished_Orders.pop(pOrd))
-		delete pOrd;
-    while(Cooking_Orders.dequeue(pOrd , pri ))
-		delete pOrd;
-	while (Ready_OV_List.dequeue(pOrd))
-		delete pOrd;
-	while (RDY_OD.dequeue(pOrd))
-		delete pOrd;
-	while (RDY_OT.dequeue(pOrd))
-		delete pOrd;
-	while (Cancelled_orders.dequeue(pOrd))
-		delete pOrd;
-	while (Finished_Orders.pop(pOrd))
-		delete pOrd;
+    Order* pOrd; int pri;
+    while (Pend_ODN.dequeue(pOrd))            delete pOrd;
+    while (Pend_ODG.dequeue(pOrd))            delete pOrd;
+    while (Pend_OT.dequeue(pOrd))             delete pOrd;
+    while (Pend_OVN.dequeue(pOrd))            delete pOrd;
+    while (Pend_OVC_List.dequeue(pOrd))       delete pOrd;
+    while (Pend_OVG.dequeue(pOrd, pri))       delete pOrd;
+    while (Cooking_Orders.dequeue(pOrd, pri)) delete pOrd;
+    while (RDY_OD.dequeue(pOrd))              delete pOrd;
+    while (RDY_OT.dequeue(pOrd))              delete pOrd;
+    while (Ready_OV_List.dequeue(pOrd))       delete pOrd;
+    while (Cancelled_orders.dequeue(pOrd))    delete pOrd;
+    while (Finished_Orders.pop(pOrd))         delete pOrd;
 }

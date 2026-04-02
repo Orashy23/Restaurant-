@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClInclude Include="Action.h" />
     <ClInclude Include="ArrayStack.h" />
+    <ClInclude Include="CancelAction.h" />
     <ClInclude Include="Chef.h" />
     <ClInclude Include="Cook_Ords.h" />
     <ClInclude Include="Fit_Tables.h" />
@@ -148,6 +149,7 @@
     <ClInclude Include="UI.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CancelAction.cpp" />
     <ClCompile Include="Chef.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Order.cpp" />

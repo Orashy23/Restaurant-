@@ -71,7 +71,7 @@ void Scooter::print()
 {
 	cout << "Scooter ID: " << ID
 		<< " Speed: " << speed
-		<< " Orders Served: " << ordercounter <<;
+		<< " Orders Served: " << ordercounter;
 }
 
 ostream& operator<<(ostream& out, const Scooter* s)

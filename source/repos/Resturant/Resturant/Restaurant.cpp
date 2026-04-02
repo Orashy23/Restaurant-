@@ -10,12 +10,12 @@ void Restaurant::AddtoPendingList(Order* pOrd)
     string type = pOrd->getType();
     if (type == "ODN")
     {
-        PENDODN.enqueue(pOrd);
+        Pend_ODN.enqueue(pOrd);
     }
 
     else if (type == "ODG")
     {
-        PENDODG.enqueue(pOrd);
+        Pend_ODG.enqueue(pOrd);
     }
     else if (type == "OT")
     {

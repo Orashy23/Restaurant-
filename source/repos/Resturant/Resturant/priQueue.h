@@ -9,6 +9,7 @@ class priQueue
 {
 protected:  //in case you need to inherit for the project
     priNode<T>* head;
+    int count;
 public:
     priQueue() : head(nullptr) {}
 
@@ -26,6 +27,7 @@ public:
             
             newNode->setNext(head);
             head = newNode;
+            count++;
             return;
         }
        
@@ -45,6 +47,7 @@ public:
         priNode<T>* temp = head;
         head = head->getNext();
         delete temp;
+        count--;
         return true;
     }
 

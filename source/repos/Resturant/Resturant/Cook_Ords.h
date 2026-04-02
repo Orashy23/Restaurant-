@@ -13,8 +13,9 @@ public:
     {
         priQueue<Order*> tempQueue;
         Order* tempOrder;
+        int pri;
         bool found = false;
-        while (this->dequeue(tempOrder)) {
+        while (this->dequeue(tempOrder,pri)) {
             if (tempOrder->getID() == id) {
                 found = true;
                 cancelledOrder = tempOrder;
@@ -23,7 +24,7 @@ public:
             }
         }
 
-        while (tempQueue.dequeue(tempOrder)) {
+        while (tempQueue.dequeue(tempOrder,pri)) {
             this->enqueue(tempOrder, tempOrder->getPriority());
         }
 

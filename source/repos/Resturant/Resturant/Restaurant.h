@@ -64,4 +64,5 @@ public:
     // Core Functions
     void AddtoPendingList(Order* pOrd);
     void ExecuteActions(int currentTimestep);
+	void CancelOrder(int id);
 };

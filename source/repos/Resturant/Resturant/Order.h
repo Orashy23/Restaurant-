@@ -5,6 +5,7 @@ class Order
 {
 private:
 	int ordersize, price, seats, ID, duration, distance;
+	int priority;
 	string type;
 	int TQ, TA, TR, TS, TF;
 	bool canShare;
@@ -16,6 +17,7 @@ public:
 	int getTQ();
 	int getSize();
 	int getPrice();
+	int getPriority();
 	string getType();
 
 	void setTA(int t);

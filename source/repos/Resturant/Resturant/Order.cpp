@@ -31,6 +31,10 @@ int Order::getPrice()
 {
 	return price;
 }
+int Order::getPriority()
+{
+	return priority;
+}
 string Order::getType()
 {
 	return type;

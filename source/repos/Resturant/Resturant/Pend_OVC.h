@@ -17,7 +17,7 @@ public:
 			if (tempOrder->getID() == cancelledID) {
 
 				found = true;
-				tempOrder = cancelledOrder;
+				cancelledOrder= tempOrder;
 			}
 			else {
 

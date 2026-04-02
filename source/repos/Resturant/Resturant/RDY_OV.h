@@ -9,9 +9,24 @@ public:
     RDY_OV() {}
 
     // Function to search and remove a specific order by ID
-    bool CancelOrder(int id)
+    bool CancelOrder(int id , Order* &cancelledOrder)
     {
-        // TO DO: Implement search and removal logic using queue nodes
-        return false;
+		LinkedQueue<Order*> tempQueue;
+		Order* tempOrder;
+		bool found = false;
+		while (this->dequeue(tempOrder)) {
+			if (tempOrder->getID() == id) {
+				found = true;
+				cancelledOrder = tempOrder;
+			} else {
+				tempQueue.enqueue(tempOrder);
+			}
+		}
+
+		while (tempQueue.dequeue(tempOrder)) {
+			this->enqueue(tempOrder);
+		}
+
+		return found;
     }
 };

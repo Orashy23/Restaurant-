@@ -79,4 +79,4 @@ ostream& operator<<(ostream& out, const Scooter* s)
 	out << "S" << s->ID;
 	return out;
 }
-}
+

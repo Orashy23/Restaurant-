@@ -82,6 +82,10 @@ int Order::getDistance()
 {
 	return distance;
 }
+void Order::setPriority(int p)
+{
+	this->priority = p;
+}
 void Order::print()
 {
 	cout << "ID: " << ID << " Type: " << type << " Price: " << price << " Size: " << ordersize;

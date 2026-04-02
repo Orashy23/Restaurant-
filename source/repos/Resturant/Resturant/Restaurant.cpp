@@ -74,4 +74,41 @@ void Restaurant::randomSimulate()
         AddtoPendingList(pOrd);
     }
 
-   
+
+Restaurant::~Restaurant()
+{
+	Order* pOrd;
+	int pri;
+	while (Pend_ODN.dequeue(pOrd))
+		delete pOrd;
+	while (Pend_ODG.dequeue(pOrd))
+		delete pOrd;
+	while (Pend_OT.dequeue(pOrd))
+		delete pOrd;
+	while (Pend_OVN.dequeue(pOrd))
+		delete pOrd;
+	while (Pend_OVC_List.dequeue(pOrd))
+		delete pOrd;
+	while (Pend_OVG.dequeue(pOrd, pri))
+		delete pOrd;
+	while (Cooking_Orders.dequeue(pOrd,pri))
+		delete pOrd;
+	while (Ready_OV_List.dequeue(pOrd))
+		delete pOrd;
+	while (Cancelled_orders.dequeue(pOrd))
+		delete pOrd;
+	while (Finished_Orders.pop(pOrd))
+		delete pOrd;
+    while(Cooking_Orders.dequeue(pOrd , pri ))
+		delete pOrd;
+	while (Ready_OV_List.dequeue(pOrd))
+		delete pOrd;
+	while (RDY_OD.dequeue(pOrd))
+		delete pOrd;
+	while (RDY_OT.dequeue(pOrd))
+		delete pOrd;
+	while (Cancelled_orders.dequeue(pOrd))
+		delete pOrd;
+	while (Finished_Orders.pop(pOrd))
+		delete pOrd;
+}

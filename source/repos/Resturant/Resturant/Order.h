@@ -25,6 +25,7 @@ public:
 	void setTR(int t);
 	void setTS(int t);
 	void setTF(int t);
+	void setPriority(int p);
 
 	void setDineInInfo(int seats, int duration, bool canShare);
 	int getSeats();

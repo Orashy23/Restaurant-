@@ -17,7 +17,7 @@ int Chef::getSpeed()
 {
 	return speed;
 }
-int Chef::getID()
+int Chef::getID() const
 {
 	return ID;
 }

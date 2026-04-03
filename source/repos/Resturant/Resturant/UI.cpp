@@ -1,6 +1,10 @@
 #include "UI.h"
 #include <iostream>
 #include "Restaurant.h"
+#include "Order.h"
+#include "Chef.h"
+#include "Scooter.h"
+
 using namespace std;
 
 UI::UI()

@@ -7,6 +7,10 @@ UI::UI()
 {
 }
 
+UI::~UI()
+{
+}
+
 int UI::getMode()
 {
 	//Getting mode from the user

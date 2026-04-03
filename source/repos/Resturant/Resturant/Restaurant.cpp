@@ -4,6 +4,7 @@
 #include "Chef.h"
 #include "Table.h"
 #include "Scooter.h"
+#include "UI.h"
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -182,33 +183,9 @@ void Restaurant::randomSimulate()
             ps->AfterMaintenance(); Free_Scooters.enqueue(ps, ps->getSpeed());
         }
 
-        cout << "\n===== TIMESTEP " << ts << " ===== " << done << "/" << totalOrders << "\n";
-        cout << "\n-- Pending --\n";
-        cout << "ODG(" << Pend_ODG.getcount()      << "): "; Pend_ODG.print();
-        cout << "ODN(" << Pend_ODN.getcount()      << "): "; Pend_ODN.print();
-        cout << "OT (" << Pend_OT.getcount()       << "): "; Pend_OT.print();
-        cout << "OVN(" << Pend_OVN.getcount()      << "): "; Pend_OVN.print();
-        cout << "OVC(" << Pend_OVC_List.getcount() << "): "; Pend_OVC_List.print();
-        cout << "OVG(" << Pend_OVG.getCount()      << "): "; Pend_OVG.print(); cout << "\n";
-        cout << "\n-- Chefs --\n";
-        cout << "CS(" << Free_CS.getcount() << "): "; Free_CS.print();
-        cout << "CN(" << Free_CN.getcount() << "): "; Free_CN.print();
-        cout << "\n-- Cooking(" << Cooking_Orders.getCount() << ") --\n"; Cooking_Orders.print(); cout << "\n";
-        cout << "\n-- Ready --\n";
-        cout << "OD(" << RDY_OD.getcount()        << "): "; RDY_OD.print();
-        cout << "OT(" << RDY_OT.getcount()        << "): "; RDY_OT.print();
-        cout << "OV(" << Ready_OV_List.getcount() << "): "; Ready_OV_List.print();
-        cout << "\n-- Scooters --\n";
-        cout << "Free("  << Free_Scooters.getCount()  << "): "; Free_Scooters.print();  cout << "\n";
-        cout << "Back("  << Back_Scooters.getCount()  << "): "; Back_Scooters.print();  cout << "\n";
-        cout << "Maint(" << Maint_Scooters.getcount() << "): "; Maint_Scooters.print();
-        cout << "\n-- Tables --\n";
-        cout << "Free(" << Free_Tables.getcount()   << "): "; Free_Tables.print();
-        cout << "Busy(" << Busy_No_Share.getcount() << "): "; Busy_No_Share.print();
-        cout << "\n-- InService(" << InServ_Orders.getCount() << ") --\n"; InServ_Orders.print(); cout << "\n";
-        cout << "\n-- Cancelled(" << Cancelled_orders.getcount() << ") --\n"; Cancelled_orders.print();
-        cout << "\n-- Finished("  << Finished_Orders.getcount()  << ") --\n"; Finished_Orders.print();
-        cout << "\nPress Enter..."; cin.get();
+        UI pUI;
+        pUI.printCurrentTimestep(ts, this);
+        pUI.waitForClick();
         ts++;
     }
     cout << "\n=== Done in " << ts-1 << " timesteps. Finished:" << Finished_Orders.getcount()

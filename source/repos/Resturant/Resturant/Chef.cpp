@@ -46,5 +46,6 @@ ostream& operator<<(ostream& out, const Chef* c)
 void Chef::setIsSpecial(bool special)
 { 
 	is_special = special;
+	//test
 }
 

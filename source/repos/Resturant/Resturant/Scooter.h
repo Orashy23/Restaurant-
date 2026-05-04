@@ -41,6 +41,8 @@ public:
 	bool needsMaintenance();
 	void AfterMaintenance();
 
+	void addDistance(int dist);
+	void incrementTrips();
 
 	friend ostream& operator<<(ostream& out, const Scooter* s);
 };

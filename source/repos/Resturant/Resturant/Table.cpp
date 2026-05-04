@@ -37,3 +37,8 @@ ostream& operator<<(ostream& os, Table* table)
 	}
 	return os;
 }
+
+void Table::setFreeSeats(int seats)
+{
+	freeSeats = seats;
+}

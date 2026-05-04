@@ -109,7 +109,10 @@ public:
     ArrayStack<Order*>* getFinished_Orders() { return &Finished_Orders; }
 
 
-    void assignReadyToService(int currentTimestep);
+    void assignTakeawayOrders(int currentTimestep);
+    void assignDineInOrders(int currentTimestep);
+    void assignDeliveryOrders(int currentTimestep);
+    void updateInServiceOrders(int currentTimestep);
 
 
 	// simulation function

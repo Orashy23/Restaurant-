@@ -2,14 +2,22 @@
 #include <string>
 #include <iostream>
 using namespace std;
+
+class Scooter;
+class Table;
+
 class Order
 {
+	
+
 private:
 	int ordersize, price, seats, ID, duration, distance;
 	int priority;
 	string type;
 	int TQ, TA, TR, TS, TF;
 	bool canShare;
+	Scooter* assignedScooter;
+	Table* assignedTable;
 	/* this T* are used to track the time taken through each step of the order cycle 
 	 (document page 4 of the project description for visualization) */
 public:
@@ -26,6 +34,16 @@ public:
 	void setTS(int t);
 	void setTF(int t);
 	void setPriority(int p);
+
+	int getTA() const;
+	int getTR() const;
+	int getTS() const;
+	int getTF() const;
+
+	void setScooter(Scooter* s);
+	Scooter* getScooter();
+	void setTable(Table* t);
+	Table* getTable();
 
 	void setDineInInfo(int seats, int duration, bool canShare);
 	int getSeats();

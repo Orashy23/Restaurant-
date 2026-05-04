@@ -1,4 +1,4 @@
-#include "Restaurant.h"
+﻿#include "Restaurant.h"
 #include "Order.h"
 #include "Action.h"
 #include "Chef.h"
@@ -195,179 +195,203 @@ void Restaurant::randomSimulate()
 
 // This function is called at the end of each timestep to assign free scooters to ready delivery orders.
 
-void Restaurant::assignReadyToService(int currentTimestep)
+// ─────────────────────────────────────────────────────────────
+// Takeaway: OT orders wait exactly 1 timestep after TR, then done.
+// ─────────────────────────────────────────────────────────────
+void Restaurant::assignTakeawayOrders(int currentTimestep)
 {
-    Scooter* pScooter;
+    LinkedQueue<Order*> notReadyYet;
     Order* pOrd;
 
-    // ==========================================
-    // PRIORITY 1: Assign Cold Orders (OVC) First
-    // ==========================================
-    while (!RDY_OVC.isEmpty() && !Free_Scooters.isEmpty())
+    while (RDY_OT.dequeue(pOrd))
     {
-        RDY_OVC.dequeue(pOrd);
-        Free_Scooters.dequeue(pScooter);
-
-        // 1. Calculate Delivery Times
-        // We use ceil() to round up in case distance/speed is a decimal
-        int t_serv = ceil((float)pOrd->getDistance() / pScooter->getSpeed());
-        int t_f = currentTimestep + t_serv;
-
-        pOrd->setFinishTime(t_f);
-
-        // 2. Update Scooter Stats
-        pScooter->addDistance(pOrd->getDistance());
-        pScooter->setReturnTime(t_f + t_serv); // Time to drive there + time to drive back
-
-        // 3. The Handoff
-        pOrd->setScooter(pScooter);
-
-        // 4. Move to In-Service
-        InServ_Orders.enqueue(pOrd);
-    }
-
-    // ==========================================
-    // PRIORITY 2: Assign Remaining Delivery Orders
-    // ==========================================
-    while (!Ready_OV.isEmpty() && !Free_Scooters.isEmpty())
-    {
-        Ready_OV.dequeue(pOrd);
-        Free_Scooters.dequeue(pScooter);
-
-        // Exact same math as above
-        int t_serv = ceil((float)pOrd->getDistance() / pScooter->getSpeed());
-        int t_f = currentTimestep + t_serv;
-
-        pOrd->setFinishTime(t_f);
-
-        pScooter->addDistance(pOrd->getDistance());
-        pScooter->setReturnTime(t_f + t_serv);
-
-        pOrd->setScooter(pScooter);
-        InServ_Orders.enqueue(pOrd);
-    }
-
-    // ==========================================
-    // PRIORITY 3: Assign Dine-in Orders (OD)
-    // ==========================================
-    while (!RDY_OD.isEmpty())
-    {
-        RDY_OD.peek(pOrd);
-        int reqSeats = pOrd->getSeats(); // Make sure Order has getSeats()
-
-        // 1. Try to find a shared table first
-        Table* assignedTable = Busy_Sharable.getBest(reqSeats);
-
-        // 2. If no shared table fits, try a completely free table
-        if (assignedTable == nullptr) {
-            assignedTable = Free_Tables.getBest(reqSeats);
-        }
-
-        // 3. Did we find ANY table?
-        if (assignedTable != nullptr)
+        // Must have waited at least 1 full timestep since becoming ready
+        if (currentTimestep >= pOrd->getTR() + 1)
         {
-            RDY_OD.dequeue(pOrd);
-
-            // Calculate Service Time (Placeholder math: adjust based on your project rules!)
-            int t_serv = reqSeats * 2;
-            pOrd->setFinishTime(currentTimestep + t_serv);
-
-            // Update table seats
-            assignedTable->setOccupiedSeats(assignedTable->getOccupiedSeats() + reqSeats);
-
-            // Move the table to the correct Busy queue (Assuming you have a way to check if it's full)
-            // For now, we will push it to Busy_No_Share if we assume it's full
-            Busy_No_Share.addTable(assignedTable);
-
-            // The Handoff
-            pOrd->setTable(assignedTable); // Make sure Order has setTable(Table* t)
-            InServ_Orders.enqueue(pOrd, pOrd->getFinishTime()); // Push with priority
+            pOrd->setTS(currentTimestep);
+            pOrd->setTF(currentTimestep);
+            Finished_Orders.push(pOrd);
         }
         else
         {
-            break; // No tables left! Order waits until next timestep.
+            notReadyYet.enqueue(pOrd);
         }
     }
 
-    // ==========================================
-    // PRIORITY 4: Assign Takeaway Orders (OT)
-    // ==========================================
-    while (!RDY_OT.isEmpty())
-    {
-        RDY_OT.dequeue(pOrd);
-
-        int t_serv = 2; // Placeholder: Takeaways just need packing time
-        pOrd->setFinishTime(currentTimestep + t_serv);
-
-        InServ_Orders.enqueue(pOrd, pOrd->getFinishTime());
-    }
-
+    // Put orders that aren't ready yet back in the queue
+    while (notReadyYet.dequeue(pOrd))
+        RDY_OT.enqueue(pOrd);
 }
 
+// ─────────────────────────────────────────────────────────────
+// Dine-in: try sharing first, then free tables. Best-fit always.
+// ─────────────────────────────────────────────────────────────
+void Restaurant::assignDineInOrders(int currentTimestep)
+{
+    LinkedQueue<Order*> unassigned;
+    Order* pOrd;
 
+    while (RDY_OD.dequeue(pOrd))
+    {
+        int seats = pOrd->getSeats();
+        Table* pt = nullptr;
+
+        // --- Priority 1: try an already-occupied sharable table ---
+        pt = Busy_Sharable.getBest(seats);
+        if (pt)
+        {
+            // Reduce free seats on that table
+            pt->setFreeSeats(pt->getFreeSeats() - seats);
+
+            // If seats remain, it can still accept more customers
+            if (pt->getFreeSeats() > 0)
+                Busy_Sharable.addTable(pt);
+            else
+                Busy_No_Share.addTable(pt); // full now, no more sharing
+        }
+        else
+        {
+            // --- Priority 2: use a brand-new free table ---
+            pt = Free_Tables.getBest(seats);
+            if (pt)
+            {
+                pt->setFreeSeats(pt->getFreeSeats() - seats);
+
+                // Where the table goes depends on the customer's sharing preference
+                if (pOrd->getCanShare() && pt->getFreeSeats() > 0)
+                    Busy_Sharable.addTable(pt); // others can still join
+                else
+                    Busy_No_Share.addTable(pt); // no sharing allowed or table is full
+            }
+        }
+
+        if (pt) // successfully assigned
+        {
+            pOrd->setTable(pt);
+            pOrd->setTS(currentTimestep);
+            pOrd->setTF(currentTimestep + pOrd->getDuration());
+            // Negative TF as priority → earliest finishing order at the front
+            InServ_Orders.enqueue(pOrd, -(pOrd->getTF()));
+        }
+        else
+        {
+            unassigned.enqueue(pOrd); // no table found, try again next timestep
+        }
+    }
+
+    while (unassigned.dequeue(pOrd))
+        RDY_OD.enqueue(pOrd);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Delivery: OVC gets priority, then all other OV types.
+// ─────────────────────────────────────────────────────────────
+void Restaurant::assignDeliveryOrders(int currentTimestep)
+{
+    // Split the single ready-OV list into cold vs. everything else
+    LinkedQueue<Order*> ovcOrders;
+    LinkedQueue<Order*> otherOrders;
+    Order* pOrd;
+
+    while (Ready_OV_List.dequeue(pOrd))
+    {
+        if (pOrd->getType() == "OVC")
+            ovcOrders.enqueue(pOrd);
+        else
+            otherOrders.enqueue(pOrd);
+    }
+
+    // Helper lambda to assign one order to one scooter
+    auto assignOne = [&](Order* ord)
+        {
+            Scooter* ps; int sp;
+            Free_Scooters.dequeue(ps, sp);
+
+            int tserv = (int)ceil((float)ord->getDistance() / ps->getSpeed());
+            ord->setTS(currentTimestep);
+            ord->setTF(currentTimestep + tserv);
+
+            ps->addDistance(ord->getDistance());
+            ps->increaseOderCounter();   // tracks maintenance threshold
+            ord->setScooter(ps);
+
+            // Negative TF → earliest finisher is at the front of InServ_Orders
+            InServ_Orders.enqueue(ord, -(ord->getTF()));
+        };
+
+    // Assign OVC first
+    while (!ovcOrders.isEmpty() && !Free_Scooters.isEmpty())
+    {
+        ovcOrders.dequeue(pOrd);
+        assignOne(pOrd);
+    }
+
+    // Then assign OVN / OVG
+    while (!otherOrders.isEmpty() && !Free_Scooters.isEmpty())
+    {
+        otherOrders.dequeue(pOrd);
+        assignOne(pOrd);
+    }
+
+    // Put any unassigned orders back into the ready list
+    while (ovcOrders.dequeue(pOrd))   Ready_OV_List.enqueue(pOrd);
+    while (otherOrders.dequeue(pOrd)) Ready_OV_List.enqueue(pOrd);
+}
+
+// ─────────────────────────────────────────────────────────────
+// Check every in-service order — finish those whose TF has arrived.
+// ─────────────────────────────────────────────────────────────
 void Restaurant::updateInServiceOrders(int currentTimestep)
 {
-    Order* pOrd;
-    int pri; // Variable to hold the priority when dequeuing
+    int size = InServ_Orders.getCount();
 
-    // Get the exact size before looping to prevent an infinite loop
-    int currentSize = InServ_Orders.getcount();
-
-    for (int i = 0; i < currentSize; i++)
+    for (int i = 0; i < size; i++)
     {
-        // Dequeue the order and its priority
+        Order* pOrd; int pri;
         InServ_Orders.dequeue(pOrd, pri);
 
-        // --- CHECK IF THE ORDER IS DONE ---
-        if (pOrd->getFinishTime() == currentTimestep)
+        if (pOrd->getTF() == currentTimestep)
         {
-            // 1. Move the food to the Finished Stack
-            Finished_Orders.push(pOrd);
-
             string type = pOrd->getType();
 
-            // 2. Handle Delivery Resources (Scooters)
+            // --- Delivery order finished ---
             if (type == "OVN" || type == "OVG" || type == "OVC")
             {
-                Scooter* pScooter = pOrd->getScooter();
-                if (pScooter != nullptr)
-                {
-                    // Send the scooter back, using its return time as the priority
-                    Back_Scooters.enqueue(pScooter, pScooter->getReturnTime());
-                }
-            }
-            // 3. Handle Dine-in Resources (Tables)
-            else if (type == "ODN" || type == "ODG")
-            {
-                Table* pTable = pOrd->getTable();
-                if (pTable != nullptr)
-                {
-                    // Subtract the people who just finished eating
-                    int newOccupied = pTable->getOccupiedSeats() - pOrd->getSeats();
-                    pTable->setOccupiedSeats(newOccupied);
+                Scooter* ps = pOrd->getScooter();
+                int returnDist = pOrd->getDistance();
 
-                    // Where does the table go now?
-                    if (newOccupied <= 0)
-                    {
-                        pTable->setOccupiedSeats(0); // Safety check
-                        Free_Tables.addTable(pTable); // It is completely empty!
-                    }
+                // Shorter return distance = arrives back sooner = higher priority
+                // priQueue is max-first, so priority = -returnDist
+                Back_Scooters.enqueue(ps, -returnDist);
+            }
+            // --- Dine-in order finished: release the table ---
+            else if (type == "ODG" || type == "ODN")
+            {
+                Table* pt = pOrd->getTable();
+                if (pt)
+                {
+                    // Return the seats this order was using
+                    pt->setFreeSeats(pt->getFreeSeats() + pOrd->getSeats());
+
+                    if (pt->getFreeSeats() == pt->getCapacity())
+                        Free_Tables.addTable(pt);   // fully empty → back to free pool
                     else
-                    {
-                        Busy_Sharable.addTable(pTable); // Still has people, but seats freed up
-                    }
+                        Busy_Sharable.addTable(pt); // still partially occupied
                 }
             }
-            // NOTE: Takeaway ("OT") orders do nothing here. They just grab food and leave!
+            // OT orders are finished directly in assignTakeawayOrders, nothing extra needed here
+
+            Finished_Orders.push(pOrd);
         }
         else
         {
-            // --- NOT DONE YET ---
-            // Push it back into the In-Service queue with its finish time as the priority
-            InServ_Orders.enqueue(pOrd, pOrd->getFinishTime());
+            // Not done yet — put it back
+            InServ_Orders.enqueue(pOrd, pri);
         }
     }
 }
+
+
 
 Restaurant::~Restaurant()
 {

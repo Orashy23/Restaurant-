@@ -14,6 +14,8 @@ Order::Order(int id, string type, int price, int size, int timerequest)
 	this->TR = 0;
 	this->TS = 0;
 	this->TF = 0;
+	this->assignedScooter = nullptr;
+	this->assignedTable = nullptr;
 }
 
 int Order::getID()
@@ -119,4 +121,12 @@ ostream& operator<<(ostream& os, Order* order)
 	return os;
 }
 
+int Order::getTA() const { return TA; }
+int Order::getTR() const { return TR; }
+int Order::getTS() const { return TS; }
+int Order::getTF() const { return TF; }
 
+void    Order::setScooter(Scooter* s) { assignedScooter = s; }
+Scooter* Order::getScooter() { return assignedScooter; }
+void    Order::setTable(Table* t) { assignedTable = t; }
+Table* Order::getTable() { return assignedTable; }

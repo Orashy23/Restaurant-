@@ -37,12 +37,13 @@ public:
 	void setMaintFinishTime(int time);
 
 	void increaseOderCounter();
+	void addDistance(int dist);
+	void incrementTrips();
 	void print();
 	bool needsMaintenance();
 	void AfterMaintenance();
 
-	void addDistance(int dist);
-	void incrementTrips();
+	
 
 	friend ostream& operator<<(ostream& out, const Scooter* s);
 };

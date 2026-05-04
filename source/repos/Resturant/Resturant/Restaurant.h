@@ -109,6 +109,8 @@ public:
     ArrayStack<Order*>* getFinished_Orders() { return &Finished_Orders; }
 
 
+    void assignReadyToService(int currentTimestep);
+
 
 	// simulation function
     void randomSimulate();

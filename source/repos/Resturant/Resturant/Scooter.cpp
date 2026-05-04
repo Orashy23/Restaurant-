@@ -13,6 +13,11 @@ Scooter::Scooter(int Id, int speed, int maintananceTime, int mainorder)
 	this->maintananceTime = maintananceTime;
 	this->maintanceOrder = mainorder;
 	this->ordercounter = 0;
+	totalDistance = 0;
+	returnTime = 0;
+	maintFinishTime = 0;
+
+
 }
 int Scooter::getID()
 {
@@ -73,6 +78,46 @@ void Scooter::print()
 		<< " Speed: " << speed
 		<< " Orders Served: " << ordercounter;
 }
+
+//int Scooter::getTotalDistance() const {
+//	return totalDistance;
+//}
+
+int Scooter::getTotalDistance()
+{
+	return totalDistance;
+}
+
+void Scooter::setTotalDistance(int dist) {
+	totalDistance = dist;
+}
+
+void Scooter::addDistance(int dist) {
+	totalDistance += dist;
+}
+
+
+
+void Scooter::incrementTrips() {
+	tripsSinceMaint++;
+}
+
+int Scooter::getReturnTime() {
+	return returnTime;
+}
+
+void Scooter::setReturnTime(int time) {
+	returnTime = time;
+}
+
+int Scooter::getMaintFinishTime() {
+	return maintFinishTime;
+}
+
+void Scooter::setMaintFinishTime(int time) {
+	maintFinishTime = time;
+}
+
 
 ostream& operator<<(ostream& out, const Scooter* s)
 {

@@ -192,6 +192,103 @@ void Restaurant::randomSimulate()
          << " Cancelled:" << Cancelled_orders.getcount() << " ===\n";
 }
 
+
+// This function is called at the end of each timestep to assign free scooters to ready delivery orders.
+
+void Restaurant::assignReadyToService(int currentTimestep)
+{
+    Scooter* pScooter;
+    Order* pOrd;
+
+    // ==========================================
+    // PRIORITY 1: Assign Cold Orders (OVC) First
+    // ==========================================
+    while (!RDY_OVC.isEmpty() && !Free_Scooters.isEmpty())
+    {
+        RDY_OVC.dequeue(pOrd);
+        Free_Scooters.dequeue(pScooter);
+
+        // 1. Calculate Delivery Times
+        // We use ceil() to round up in case distance/speed is a decimal
+        int t_serv = ceil((float)pOrd->getDistance() / pScooter->getSpeed());
+        int t_f = currentTimestep + t_serv;
+
+        pOrd->setFinishTime(t_f);
+
+        // 2. Update Scooter Stats
+        pScooter->addDistance(pOrd->getDistance());
+        pScooter->setReturnTime(t_f + t_serv); // Time to drive there + time to drive back
+
+        // 3. The Handoff
+        pOrd->setScooter(pScooter);
+
+        // 4. Move to In-Service
+        InServ_Orders.enqueue(pOrd);
+    }
+
+    // ==========================================
+    // PRIORITY 2: Assign Remaining Delivery Orders
+    // ==========================================
+    while (!Ready_OV.isEmpty() && !Free_Scooters.isEmpty())
+    {
+        Ready_OV.dequeue(pOrd);
+        Free_Scooters.dequeue(pScooter);
+
+        // Exact same math as above
+        int t_serv = ceil((float)pOrd->getDistance() / pScooter->getSpeed());
+        int t_f = currentTimestep + t_serv;
+
+        pOrd->setFinishTime(t_f);
+
+        pScooter->addDistance(pOrd->getDistance());
+        pScooter->setReturnTime(t_f + t_serv);
+
+        pOrd->setScooter(pScooter);
+        InServ_Orders.enqueue(pOrd);
+    }
+}
+
+
+void Restaurant::updateInServiceOrders(int currentTimestep)
+{
+    Order* pOrd;
+
+    // We get the exact size before looping. 
+    // This stops us from inifinitely looping if we push items back in!
+    int currentSize = InServ_Orders.getCount(); // Use your queue's size/count function
+
+    for (int i = 0; i < currentSize; i++)
+    {
+        InServ_Orders.dequeue(pOrd);
+
+        // --- CHECK IF THE ORDER IS DONE ---
+        if (pOrd->getFinishTime() == currentTimestep)
+        {
+            // 1. Move the food to the Finished stack/queue
+            Finished_Orders.enqueue(pOrd);
+
+            // 2. Check if it was a Delivery Order (OV)
+            if (pOrd->getType() == TYPE_OVN || pOrd->getType() == TYPE_OVG || pOrd->getType() == TYPE_OVC)
+            {
+                // Extract the scooter we attached earlier
+                Scooter* pScooter = pOrd->getScooter();
+
+                // Send it driving back to the restaurant!
+                Back_Scooters.enqueue(pScooter);
+            }
+
+            // NOTE: You will add an 'else if' here later for Dine-in orders 
+            // to release their Table using pOrd->getTable()
+        }
+        else
+        {
+            // --- NOT DONE YET ---
+            // Push it to the back of the queue so it can keep waiting
+            InServ_Orders.enqueue(pOrd);
+        }
+    }
+}
+
 Restaurant::~Restaurant()
 {
     Order* pOrd; int pri;

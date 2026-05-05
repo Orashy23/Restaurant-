@@ -5,11 +5,12 @@
 #include "Table.h"
 #include "Scooter.h"
 #include "UI.h"
+#include "RequestAction.h"
+#include "CancelAction.h"
 #include <iostream>
-#include <cstdlib>
-#include <ctime>
+#include <fstream>
+#include <string>
 using namespace std;
-//123
 
 Restaurant::Restaurant()
 {}
@@ -48,152 +49,94 @@ void Restaurant::CancelOrder(int id)
     else if (Ready_OV_List.CancelOrder(id, pOrd))  { Cancelled_orders.enqueue(pOrd); return; }
 }
 
-void Restaurant::randomSimulate()
+void Restaurant::loadFile(string filename)
 {
-    srand((unsigned int)time(0));
+    int CN, CS, CN_Speed, CS_Speed, S_count, S_speed;
+    int Main_Ords, Main_Dur;
+    int Table_numbers;
+    int TH, Total_Action;
 
-    for (int i = 1; i <= 10; i++) Free_CS.enqueue(new Chef(i, true, 2));
-    for (int i = 11; i <= 25; i++) Free_CN.enqueue(new Chef(i, false, 3));
+    
+	
 
-    int tid = 1;
-    for (int i = 0; i < 10; i++) Free_Tables.addTable(new Table(tid++, 4));
-    for (int i = 0; i < 10; i++) Free_Tables.addTable(new Table(tid++, 6));
-    for (int i = 0; i < 10; i++) Free_Tables.addTable(new Table(tid++, 8));
 
-    for (int i = 1; i <= 15; i++)
-        Free_Scooters.enqueue(new Scooter(i, 50, 5, 3), i);
 
-    // Generate 500 orders
-    string types[] = { "ODG", "ODN", "OT", "OVN", "OVC", "OVG" };
-    int totalOrders = 500;
-    for (int i = 1; i <= totalOrders; i++) {
-        string type = types[rand() % 6];
-        Order* pOrd = new Order(i, type, rand() % 200 + 50, rand() % 5 + 1, 0);
-        if (type == "ODG" || type == "ODN")
-            pOrd->setDineInInfo(rand() % 4 + 2, rand() % 10 + 3, rand() % 2 == 0);
-        else if (type == "OVC" || type == "OVG" || type == "OVN")
-            pOrd->setDistance(rand() % 900 + 100);
-        AddtoPendingList(pOrd);
+
+
+
+    ifstream input(filename);
+    input >> CN >> CS
+        >> CN_Speed >> CS_Speed
+        >> S_count >> S_speed
+        >> Main_Ords >> Main_Dur
+        >> Table_numbers;
+
+    int tablesCreated = 0;
+    int tableID = 1;
+    int Table_Count, Capacity;
+
+    while (tablesCreated < Table_numbers)
+    {
+        input >> Table_Count >> Capacity;
+        for (int i = 0; i < Table_Count; i++)
+            Free_Tables.addTable(new Table(tableID++, Capacity));
+        tablesCreated += Table_Count;
     }
+	input >> TH >> Total_Action;
+	char Action_Type;
+	int Action_Time, ID, Size, Price, Seats, Duration, CanShareInt, Distance;
+	int Action_Count = 0;
 
 
-    LinkedQueue<Chef*>    Busy_Chefs;
-    LinkedQueue<Scooter*> InUse_Scooters;
-    int done = 0, ts = 1;
-
-    while (done < totalOrders) {
-        for (int i = 0; i < 30; i++) {
-            Order* pOrd = nullptr; bool got = false;
-            int lc = rand() % 6;
-            for (int a = 0; a < 6 && !got; a++) {
-                int l = (lc+a)%6, p;
-                if      (l==0 && !Pend_ODG.isEmpty())      { Pend_ODG.dequeue(pOrd);      got=true; }
-                else if (l==1 && !Pend_ODN.isEmpty())      { Pend_ODN.dequeue(pOrd);      got=true; }
-                else if (l==2 && !Pend_OT.isEmpty())       { Pend_OT.dequeue(pOrd);       got=true; }
-                else if (l==3 && !Pend_OVN.isEmpty())      { Pend_OVN.dequeue(pOrd);      got=true; }
-                else if (l==4 && !Pend_OVC_List.isEmpty()) { Pend_OVC_List.dequeue(pOrd); got=true; }
-                else if (l==5 && !Pend_OVG.isEmpty())      { Pend_OVG.dequeue(pOrd,p);   got=true; }
-            }
-            if (!got) break;
-            Chef* pChef = nullptr;
-            if (rand()%2==0 && !Free_CS.isEmpty()) Free_CS.dequeue(pChef);
-            else if (!Free_CN.isEmpty())           Free_CN.dequeue(pChef);
-            else if (!Free_CS.isEmpty())           Free_CS.dequeue(pChef);
-            if (!pChef) { AddtoPendingList(pOrd); break; }
-            pChef->setIsFree(false);
-            Busy_Chefs.enqueue(pChef);
-            Cooking_Orders.enqueue(pOrd, pOrd->getSize());
+    while (Total_Action > Action_Count) {
+        input >> Action_Type;
+        if (Action_Type == 'X'){
+            input >> Action_Time >> ID;
+			CancelAction* cancelAct = new CancelAction(Action_Time, ID);
+            Cancel_Actions.enqueue(cancelAct);
+            Action_Count++;
         }
-
-        for (int i = 0; i < 15; i++) {
-            if (rand()%100 >= 75) continue;
-            if (Cooking_Orders.isEmpty()) break;
-            Order* pOrd; int p;
-            Cooking_Orders.dequeue(pOrd, p);
-            Chef* pChef;
-            if (Busy_Chefs.dequeue(pChef)) {
-                pChef->setIsFree(true);
-                if (pChef->getIsSpecial()) Free_CS.enqueue(pChef);
-                else Free_CN.enqueue(pChef);
-            }
-            string t = pOrd->getType();
-            if (t=="ODG"||t=="ODN") RDY_OD.enqueue(pOrd);
-            else if (t=="OT")       RDY_OT.enqueue(pOrd);
-            else                    Ready_OV_List.enqueue(pOrd);
-        }
-
-        for (int i = 0; i < 10; i++) {
-            Order* pOrd = nullptr; bool got = false;
-            int lc = rand() % 3;
-            for (int a = 0; a < 3 && !got; a++) {
-                int l = (lc+a)%3;
-                if      (l==0 && !RDY_OD.isEmpty())        { RDY_OD.dequeue(pOrd);        got=true; }
-                else if (l==1 && !RDY_OT.isEmpty())        { RDY_OT.dequeue(pOrd);        got=true; }
-                else if (l==2 && !Ready_OV_List.isEmpty()) { Ready_OV_List.dequeue(pOrd); got=true; }
-            }
-            if (!got) break;
-            string t = pOrd->getType();
-            if (t=="OT") { Finished_Orders.push(pOrd); done++; }
-            else if (t=="OVN"||t=="OVC"||t=="OVG") {
-                Scooter* ps; int sp;
-                if (!Free_Scooters.isEmpty()) {
-                    Free_Scooters.dequeue(ps,sp); ps->increaseOderCounter(); InUse_Scooters.enqueue(ps);
-                }
-                InServ_Orders.enqueue(pOrd, rand()%20+1);
-            }
-            else {
-                int seats = pOrd->getSeats(); if (seats==0) seats=2;
-                Table* pt = Free_Tables.getBest(seats);
-                if (pt) Busy_No_Share.addTable(pt);
-                InServ_Orders.enqueue(pOrd, rand()%20+1);
-            }
-        }
-
-        { int id=rand()%totalOrders+1; Order* po; if(Pend_OVC_List.Cancel_Order(id,po)){Cancelled_orders.enqueue(po);done++;} }
-        { int id=rand()%totalOrders+1; Order* po; if(Ready_OV_List.CancelOrder(id,po)){Cancelled_orders.enqueue(po);done++;} }
+        else if (Action_Type == 'Q')
         {
-            int id=rand()%totalOrders+1; Order* po;
-            if(Cooking_Orders.CancelOrder(id,po)){
-                Chef* pc;
-                if(Busy_Chefs.dequeue(pc)){pc->setIsFree(true); if(pc->getIsSpecial())Free_CS.enqueue(pc); else Free_CN.enqueue(pc);}
-                Cancelled_orders.enqueue(po); done++;
+            string type;
+            input >> type >> Action_Time >> ID >> Size >> Price;
+            int Seats = 0, Duration = 0, Distance = 0;
+            bool CanShare = false;
+
+            if (type == "ODG" || type == "ODN")
+            {
+                char canShareChar;
+                input >> Seats >> Duration >> canShareChar;
+                CanShare = (canShareChar == 'Y');
             }
-        }
-
-        if (rand()%100<25 && !InServ_Orders.isEmpty()) {
-            Order* po; int p; InServ_Orders.dequeue(po,p);
-            string t = po->getType();
-            if (t=="OVN"||t=="OVC"||t=="OVG") {
-                Scooter* ps; if(InUse_Scooters.dequeue(ps)) Back_Scooters.enqueue(ps,ps->getSpeed());
-            } else if (t=="ODG"||t=="ODN") {
-                Table* pt; int tp;
-                if(!Busy_No_Share.isEmpty()){Busy_No_Share.dequeue(pt,tp); Free_Tables.addTable(pt);}
+            else if (type == "OVC" || type == "OVG" || type == "OVN")
+            {
+                input >> Distance;
             }
-            Finished_Orders.push(po); done++;
+
+            RequestAction* requestAct = new RequestAction(Action_Time, type, ID, Size, Price, Seats, Duration, CanShare, Distance);
+            Request_Actions.enqueue(requestAct);
+            Action_Count++;
         }
 
-        if (rand()%100<50 && !Back_Scooters.isEmpty()) {
-            Scooter* ps; int p; Back_Scooters.dequeue(ps,p);
-            if(ps->needsMaintenance()) Maint_Scooters.enqueue(ps);
-            else Free_Scooters.enqueue(ps, ps->getSpeed());
-        }
 
-        if (rand()%100<50 && !Maint_Scooters.isEmpty()) {
-            Scooter* ps; Maint_Scooters.dequeue(ps);
-            ps->AfterMaintenance(); Free_Scooters.enqueue(ps, ps->getSpeed());
-        }
-
-        UI pUI;
-        pUI.printCurrentTimestep(ts, this);
-        pUI.waitForClick();
-        ts++;
+    
     }
-    cout << "\n=== Done in " << ts-1 << " timesteps. Finished:" << Finished_Orders.getcount()
-         << " Cancelled:" << Cancelled_orders.getcount() << " ===\n";
+
+
+    for (int i = 1; i <= CN; i++) {
+        Free_CN.enqueue(new Chef(i, false, CN_Speed));
+    }
+    for (int i = 1+CN; i <=CS + CN; i++) {
+        Free_CS.enqueue(new Chef(i, true, CS_Speed));
+    }
+    for (int i = 1; i <= S_count; i++) {
+        Free_Scooters.enqueue(new Scooter(i, S_speed, Main_Ords, Main_Dur), 0);
+	}
+        
+
+    
 }
-
-
-// This function is called at the end of each timestep to assign free scooters to ready delivery orders.
 
 // ─────────────────────────────────────────────────────────────
 // Takeaway: OT orders wait exactly 1 timestep after TR, then done.

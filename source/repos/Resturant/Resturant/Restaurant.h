@@ -115,6 +115,5 @@ public:
     void updateInServiceOrders(int currentTimestep);
 
 
-	// simulation function
-    void randomSimulate();
+    void loadFile(string filename);
 };

@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+
 using namespace std;
 
 Restaurant::Restaurant()
@@ -79,6 +80,10 @@ void Restaurant::loadFile(string filename)
     int tablesCreated = 0;
     int tableID = 1;
     int Table_Count, Capacity;
+	CS_Count = CS;
+	CN_Count = CN;
+	Scotter_Count = S_count;
+
 
     while (tablesCreated < Table_numbers)
     {
@@ -518,6 +523,102 @@ void Restaurant::updateScooters(int currentTimestep) {
         Maint_Scooters.enqueue(pScooter);
     }
 }
+void Restaurant::writeOutput(string filename)
+{
+    priQueue<Order*> Descending_TF;
+    Order* ord;
+    while (Finished_Orders.pop(ord))
+    {
+        Descending_TF.enqueue(ord, ord->getTF());
+
+    }
+    ofstream output(filename);
+    int pri;
+    int Total_Order = 0;
+    int ODG = 0, ODN = 0, OT = 0, OVN = 0, OVC = 0, OVG = 0;
+    int Total_CS = 0;
+    int Total_CN = 0;
+    int Scotters = 0;
+    int Finished = 0;
+    int Cancelled = 0;
+    int Avg_Ti = 0;
+    int Avg_Tc = 0;
+    int Avg_Tw = 0;
+    int Avg_Tserv = 0;
+
+    while (Descending_TF.dequeue(ord, pri)) {
+        int TQ = ord->getTQ();
+        int TA = ord->getTA();
+        int TS = ord->getTS();
+        int TR = ord->getTR();
+        int TF = ord->getTF();
+        int Id = ord->getID();
+        int Ti = (TA - TQ) + (TS - TR);
+        int Tc = TR - TA;
+        int Tw = Ti + Tc;
+        int Tserv = TF - TS;
+
+
+        output << TF << " " << Id << " " << TQ << " " << TA << " " << TR << " " << TS << " " << Ti << " " << Tc
+            << " " << Tw << " " << Tserv << "\n";
+
+
+        Finished++;
+
+        string type = ord->getType();
+        if (type == "ODG") ODG++;
+        else if (type == "ODN") {
+            ODN++;
+        }
+        else if (type == "OT") {
+            OT++;
+        }
+        else if (type == "OVN") {
+            OVN++;
+        }
+        else if (type == "OVC") {
+            OVC++;
+        }
+        else if (type == "OVG") {
+            OVG++;
+        }
+
+        Avg_Ti += Ti;
+        Avg_Tc += Tc;
+        Avg_Tw += Tw;
+        Avg_Tserv += Tserv;
+
+    }
+    Cancelled = Cancelled_orders.getcount();
+    Total_Order = Finished + Cancelled;
+    Avg_Ti = Avg_Ti / Finished;
+    Avg_Tc = Avg_Tc / Finished;
+    Avg_Tw = Avg_Tw / Finished;
+    Avg_Tserv = Avg_Tserv / Finished;
+
+    output << "Total Orders: " << Total_Order << "\n";
+    output << "ODG: " << ODG << ", ODN: " << ODN << ", OT: " << OT << ", OVN: " << OVN
+        << ", OVC: " << OVC << ", OVG: " << OVG << "\n";
+    output << "Total Chefs: " << CN_Count + CS_Count << "\n";
+    output << "CS: " << CS_Count << " CN: " << CN_Count << "\n";
+    output << "Total Scooters: " << Scotter_Count << "\n";
+    output << "Finished Orders: " << Finished << " (" << (Finished * 100 / Total_Order) << "%)\n";
+    output << "Cancelled Orders: " << Cancelled << " (" << (Cancelled * 100 / Total_Order) << "%)\n";
+    output << "Average Ti: " << Avg_Ti << "\n";
+    output << "Average Tc: " << Avg_Tc << "\n";
+    output << "Average Tw: " << Avg_Tw << "\n";
+    output << "Average Tserv: " << Avg_Tserv << "\n";
+    // todo : Chef utilization and Scooter utilization needs data from simulation loop
+}
+
+
+
+
+
+
+
+
+
 
 
 

@@ -15,9 +15,14 @@ class Table;
 class Scooter;
 class Action;
 
+
 class Restaurant
 {
 private:
+
+	int CS_Count;
+	int CN_Count;
+	int Scotter_Count;
     ////////////// 1. Action Lists (2) /////////////
     LinkedQueue<Action*> Request_Actions; // Q actions from file
     LinkedQueue<Action*> Cancel_Actions;  // X actions from file
@@ -127,4 +132,5 @@ public:
 
 
     void loadFile(string filename);
+    void writeOutput(string filename);
 };

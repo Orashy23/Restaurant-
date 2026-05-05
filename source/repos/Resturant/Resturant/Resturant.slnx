@@ -3,5 +3,5 @@
     <Platform Name="x64" />
     <Platform Name="x86" />
   </Configurations>
-  <Project Path="Resturant/Resturant.vcxproj" Id="e230599f-338f-41b1-bcec-326dff782dee" />
+  <Project Path="Resturant.vcxproj" Id="e230599f-338f-41b1-bcec-326dff782dee" />
 </Solution>

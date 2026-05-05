@@ -45,7 +45,19 @@ void Restaurant::CancelOrder(int id)
 {
     Order* pOrd;
     if (Pend_OVC_List.Cancel_Order(id, pOrd))    { Cancelled_orders.enqueue(pOrd); return; }
-    else if (Cooking_Orders.CancelOrder(id, pOrd)) { Cancelled_orders.enqueue(pOrd); return; }
+    else if (Cooking_Orders.CancelOrder(id, pOrd)) 
+    {
+		// If the order is currently being cooked, we also need to free up the chef
+		Chef* c = pOrd->getChef();
+        if (c) {
+            c->setIsFree(true);
+            if (c->getIsSpecial())
+                Free_CS.enqueue(c);
+            else
+                Free_CN.enqueue(c);
+        }
+        Cancelled_orders.enqueue(pOrd); return;
+    }
     else if (Ready_OV_List.CancelOrder(id, pOrd))  { Cancelled_orders.enqueue(pOrd); return; }
 }
 
@@ -55,13 +67,6 @@ void Restaurant::loadFile(string filename)
     int Main_Ords, Main_Dur;
     int Table_numbers;
     int TH, Total_Action;
-
-    
-	
-
-
-
-
 
 
     ifstream input(filename);
@@ -331,6 +336,163 @@ void Restaurant::updateInServiceOrders(int currentTimestep)
             // Not done yet — put it back
             InServ_Orders.enqueue(pOrd, pri);
         }
+    }
+}
+
+// Check if all queues are empty // if the simulation is done or not
+bool Restaurant::simulationDone() {
+    return Request_Actions.isEmpty() && Cancel_Actions.isEmpty() &&
+        Pend_ODG.isEmpty() && Pend_ODN.isEmpty() && Pend_OT.isEmpty() &&
+        Pend_OVN.isEmpty() && Pend_OVG.isEmpty() && Pend_OVC_List.isEmpty() &&
+        Cooking_Orders.isEmpty() &&
+        RDY_OD.isEmpty() && RDY_OT.isEmpty() && Ready_OV_List.isEmpty() &&
+        InServ_Orders.isEmpty();
+}
+
+// Main timestep loop
+void Restaurant::simulate() {
+    UI ui;
+    string inFile, outFile;
+
+    // 1. Get input/output file names and operating mode from the user
+    ui.getFileNames(inFile, outFile);
+    int mode = ui.getMode();
+
+    // 2. Load all initial data (Chefs, Tables, Scooters, Actions) from the file [Member 1]
+    loadFile(inFile);
+
+    if (mode == 2) ui.printMsg("Simulation Starts in Silent mode...");
+
+    int currentTimestep = 1;
+
+    // 3. Main simulation loop: runs as long as there are incomplete tasks
+    while (!simulationDone()) {
+
+        // Step A: Execute customer actions (Requests/Cancellations) for this specific minute
+        ExecuteActions(currentTimestep);
+
+        // Step B: Update scooter status (Returning from trips or finishing maintenance) 
+        updateScooters(currentTimestep);
+
+        // Step C: Assign waiting orders to available chefs 
+        // assignPendingToChefs(currentTimestep); 
+
+        // Step D: Move finished cooking orders to ready lists and free their chefs 
+        updateCookingOrders(currentTimestep);
+
+        // Step E: Assign ready orders to service resources (Tables/Scooters) 
+        assignTakeawayOrders(currentTimestep);
+        assignDineInOrders(currentTimestep);
+        assignDeliveryOrders(currentTimestep);
+
+        // Step F: Check in-service orders to finish those whose service time has ended 
+        updateInServiceOrders(currentTimestep);
+
+        // Step G: Display current system status in Interactive Mode 
+        if (mode == 1) {
+            ui.printCurrentTimestep(currentTimestep, this);
+            ui.waitForClick();
+        }
+
+        currentTimestep++;
+    }
+
+    // 4. Final step: Generate the statistics output file 
+    // writeOutputFile(outFile); 
+
+    if (mode == 2) ui.printMsg("Simulation ends, Output file created.");
+}
+
+
+// Move finished cooking orders to ready lists and free chefs
+void Restaurant::updateCookingOrders(int currentTimestep) {
+    priQueue<Order*> tempQueue;
+    Order* pOrd;
+    int pri;
+
+    while (Cooking_Orders.dequeue(pOrd, pri)) {
+        if (currentTimestep >= pOrd->getTR()) { // Order is ready
+            Chef* pChef = pOrd->getChef();
+            pChef->setIsFree(true);
+
+            // Return chef to correct free list
+            if (pChef->getIsSpecial()) {
+                Free_CS.enqueue(pChef);
+            }
+            else {
+                Free_CN.enqueue(pChef);
+            }
+
+            // Route order to correct ready list
+            string type = pOrd->getType();
+            if (type == "ODG" || type == "ODN") {
+                RDY_OD.enqueue(pOrd);
+            }
+            else if (type == "OT") {
+                RDY_OT.enqueue(pOrd);
+            }
+            else {
+                Ready_OV_List.enqueue(pOrd);
+            }
+        }
+        else {
+            // Still cooking
+            tempQueue.enqueue(pOrd, pri);
+        }
+    }
+
+    // Restore cooking queue
+    while (tempQueue.dequeue(pOrd, pri)) {
+        Cooking_Orders.enqueue(pOrd, pri);
+    }
+}
+
+// Manage returning and maintenance scooters
+void Restaurant::updateScooters(int currentTimestep) {
+    priQueue<Scooter*> tempBack;
+    Scooter* pScooter;
+    int pri;
+
+    // Process returning scooters
+    while (Back_Scooters.dequeue(pScooter, pri)) {
+        if (currentTimestep >= pScooter->getReturnTime()) {
+            if (pScooter->needsMaintenance()) {
+                pScooter->setMaintFinishTime(currentTimestep + pScooter->getMaintananceTime());
+                Maint_Scooters.enqueue(pScooter);
+            }
+            else {
+                // Enqueue with negative total distance for shortest-traveled priority
+                Free_Scooters.enqueue(pScooter, -(pScooter->getTotalDistance()));
+            }
+        }
+        else {
+            // Still returning
+            tempBack.enqueue(pScooter, pri);
+        }
+    }
+
+    // Restore back scooters queue
+    while (tempBack.dequeue(pScooter, pri)) {
+        Back_Scooters.enqueue(pScooter, pri);
+    }
+
+    LinkedQueue<Scooter*> tempMaint;
+
+    // Process maintenance scooters
+    while (Maint_Scooters.dequeue(pScooter)) {
+        if (currentTimestep >= pScooter->getMaintFinishTime()) {
+            pScooter->AfterMaintenance(); // Resets order counter
+            Free_Scooters.enqueue(pScooter, -(pScooter->getTotalDistance()));
+        }
+        else {
+            // Still in maintenance
+            tempMaint.enqueue(pScooter);
+        }
+    }
+
+    // Restore maintenance queue
+    while (tempMaint.dequeue(pScooter)) {
+        Maint_Scooters.enqueue(pScooter);
     }
 }
 

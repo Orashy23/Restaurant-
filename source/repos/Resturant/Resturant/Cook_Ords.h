@@ -9,25 +9,30 @@ public:
     Cook_Ords() {}
 
     // Function to search and remove a specific order by ID
-    bool CancelOrder(int id , Order* &cancelledOrder)
-    {
+   // Search and remove a specific order by ID while it is being cooked
+    bool CancelOrder(int id, Order*& cancelledOrder) {
         priQueue<Order*> tempQueue;
         Order* tempOrder;
         int pri;
         bool found = false;
-        while (this->dequeue(tempOrder,pri)) {
+
+        // Use a temporary queue to find the targeted ID
+        while (this->dequeue(tempOrder, pri)) {
             if (tempOrder->getID() == id) {
                 found = true;
                 cancelledOrder = tempOrder;
-            } else {
-                tempQueue.enqueue(tempOrder, tempOrder->getPriority());
+                // Note: We don't break here to ensure we process the whole queue if needed,
+                // though IDs are unique so we could break for optimization.
+            }
+            else {
+                tempQueue.enqueue(tempOrder, pri);
             }
         }
 
-        while (tempQueue.dequeue(tempOrder,pri)) {
-            this->enqueue(tempOrder, tempOrder->getPriority());
+        // Restore the cooking queue without the cancelled order
+        while (tempQueue.dequeue(tempOrder, pri)) {
+            this->enqueue(tempOrder, pri);
         }
-
         return found;
     }
 };

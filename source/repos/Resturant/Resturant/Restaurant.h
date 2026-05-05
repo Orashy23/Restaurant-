@@ -57,7 +57,15 @@ private:
     LinkedQueue<Order*> Cancelled_orders; // List of all cancelled orders
     ArrayStack<Order*> Finished_Orders;   // All completed orders
 
+	void updateCookingOrders(int currentTimestep); // Move orders 
+	void updateScooters(int currentTimestep); // Move scooters 
+    bool simulationDone();
+
 public:
+
+    
+    void simulate();
+
     Restaurant();
     ~Restaurant();
 

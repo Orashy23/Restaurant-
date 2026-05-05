@@ -6,6 +6,8 @@ using namespace std;
 class Scooter;
 class Table;
 
+class Chef; // Forward declaration
+
 class Order
 {
 	
@@ -18,6 +20,7 @@ private:
 	bool canShare;
 	Scooter* assignedScooter;
 	Table* assignedTable;
+	Chef* assignedChef; //this is the chef that will prepare the order once finished , it will be set to nullptr;
 	/* this T* are used to track the time taken through each step of the order cycle 
 	 (document page 4 of the project description for visualization) */
 public:
@@ -54,6 +57,9 @@ public:
 	int getDistance();
 
 	void print();
+
+	void setChef(Chef* c) { assignedChef = c; }
+	Chef* getChef() { return assignedChef; }
 
 	friend ostream& operator<<(ostream& os, Order* order);
 

@@ -13,6 +13,7 @@ private:
 	int tripsSinceMaint;     // Tracks how many deliveries it has done since last maintenance
 	int returnTime;          // The timestep when this scooter arrives back at the restaurant
 	int maintFinishTime;     // The timestep when it leaves the mechanic
+	int totalBusyTime;
 
 
 public:

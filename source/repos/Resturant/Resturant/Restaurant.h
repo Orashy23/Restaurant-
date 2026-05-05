@@ -61,6 +61,9 @@ private:
 	void updateScooters(int currentTimestep); // Move scooters 
     bool simulationDone();
 
+	void updateStatisticsCounters(); // Update any counters needed for final report generation 
+  
+
 public:
 
     

@@ -341,54 +341,77 @@ void Restaurant::updateInServiceOrders(int currentTimestep)
 
 // Check if all queues are empty // if the simulation is done or not
 bool Restaurant::simulationDone() {
-    return Request_Actions.isEmpty() && Cancel_Actions.isEmpty() &&
-        Pend_ODG.isEmpty() && Pend_ODN.isEmpty() && Pend_OT.isEmpty() &&
-        Pend_OVN.isEmpty() && Pend_OVG.isEmpty() && Pend_OVC_List.isEmpty() &&
+   
+    return
+        // 1. Check Action Queues
+        Request_Actions.isEmpty() &&
+        Cancel_Actions.isEmpty() &&
+
+        // 2. Check All Pending Lists (6 lists)
+        Pend_ODG.isEmpty() &&
+        Pend_ODN.isEmpty() &&
+        Pend_OT.isEmpty() &&
+        Pend_OVN.isEmpty() &&
+        Pend_OVG.isEmpty() &&
+        Pend_OVC_List.isEmpty() &&
+
+        // 3. Check Kitchen status
         Cooking_Orders.isEmpty() &&
-        RDY_OD.isEmpty() && RDY_OT.isEmpty() && Ready_OV_List.isEmpty() &&
-        InServ_Orders.isEmpty();
+
+        // 4. Check All Ready Lists (3 lists)
+        RDY_OD.isEmpty() &&
+        RDY_OT.isEmpty() &&
+        Ready_OV_List.isEmpty() &&
+
+        // 5. Check Orders currently in service
+        InServ_Orders.isEmpty() &&
+
+        // 6. Check Scooters lifecycle (Returning or Repairing)
+        Back_Scooters.isEmpty() &&
+        Maint_Scooters.isEmpty();
 }
 
-// Main timestep loop
+void Restaurant::updateStatisticsCounters()
+{
+    
+}
+
 void Restaurant::simulate() {
     UI ui;
     string inFile, outFile;
 
-    // 1. Get input/output file names and operating mode from the user
+    // Initial configuration and file loading
     ui.getFileNames(inFile, outFile);
     int mode = ui.getMode();
-
-    // 2. Load all initial data (Chefs, Tables, Scooters, Actions) from the file [Member 1]
     loadFile(inFile);
 
     if (mode == 2) ui.printMsg("Simulation Starts in Silent mode...");
 
     int currentTimestep = 1;
 
-    // 3. Main simulation loop: runs as long as there are incomplete tasks
+    // Primary simulation loop
     while (!simulationDone()) {
-
-        // Step A: Execute customer actions (Requests/Cancellations) for this specific minute
+        // Process requests and cancellations for the current timestep
         ExecuteActions(currentTimestep);
 
-        // Step B: Update scooter status (Returning from trips or finishing maintenance) 
+        // Update resource availability before new assignments
         updateScooters(currentTimestep);
-
-        // Step C: Assign waiting orders to available chefs 
         // assignPendingToChefs(currentTimestep); 
 
-        // Step D: Move finished cooking orders to ready lists and free their chefs 
         updateCookingOrders(currentTimestep);
 
-        // Step E: Assign ready orders to service resources (Tables/Scooters) 
+        // Execute stage 2 assignments
         assignTakeawayOrders(currentTimestep);
         assignDineInOrders(currentTimestep);
         assignDeliveryOrders(currentTimestep);
 
-        // Step F: Check in-service orders to finish those whose service time has ended 
+        // Finalize orders reaching completion time
         updateInServiceOrders(currentTimestep);
 
-        // Step G: Display current system status in Interactive Mode 
+        // Increment busy time counters for utilization statistics
+        updateStatisticsCounters();
+
+        // Handle interface output
         if (mode == 1) {
             ui.printCurrentTimestep(currentTimestep, this);
             ui.waitForClick();
@@ -397,8 +420,8 @@ void Restaurant::simulate() {
         currentTimestep++;
     }
 
-    // 4. Final step: Generate the statistics output file 
-    // writeOutputFile(outFile); 
+    // Post-simulation report generation
+    // writeOutputFile(outFile, currentTimestep - 1); 
 
     if (mode == 2) ui.printMsg("Simulation ends, Output file created.");
 }

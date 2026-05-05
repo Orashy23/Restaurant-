@@ -8,6 +8,7 @@ Chef::Chef(int Id, bool is_special, int speed)
 	this->is_special = is_special;
 	this->speed = speed;
 	this->is_free = true;
+	this->totalBusyTime = 0;
 }
 bool Chef::getIsSpecial()
 {

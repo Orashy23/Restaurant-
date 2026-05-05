@@ -5,6 +5,6 @@ using namespace std;
 int main()
 {
 	Restaurant R;
-	R.randomSimulate();
+	R.simulate();
 	return 0;
 }

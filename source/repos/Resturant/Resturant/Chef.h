@@ -7,6 +7,7 @@ private:
 	int ID ;
 	bool is_special, is_free;
 	int speed;
+    int totalBusyTime;
 
 public:
 	Chef(int Id, bool is_special, int speed);

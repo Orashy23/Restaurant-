@@ -14,6 +14,7 @@ Scooter::Scooter(int Id, int speed, int maintananceTime, int mainorder)
 	this->maintanceOrder = mainorder;
 	this->ordercounter = 0;
 	this->tripsSinceMaint = 0;
+	this->totalBusyTime = 0;
 	totalDistance = 0;
 	returnTime = 0;
 	maintFinishTime = 0;

@@ -80,7 +80,10 @@ void Scooter::print()
 		<< " Orders Served: " << ordercounter;
 }
 
-
+bool Scooter::checkfailure() {
+	int r = rand() % 100;
+	return r < breakdownprobability;
+}
 
 int Scooter::getTotalDistance()
 {

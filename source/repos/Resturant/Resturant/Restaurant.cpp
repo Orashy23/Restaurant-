@@ -20,7 +20,8 @@ Restaurant::Restaurant()
 void Restaurant::AddtoPendingList(Order* pOrd)
 {
     string type = pOrd->getType();
-    if (type == "ODN")        Pend_ODN.enqueue(pOrd);
+    if (type == "COMBO") Pend_COMBO.enqueue(pOrd);
+    else if (type == "ODN")        Pend_ODN.enqueue(pOrd);
     else if (type == "ODG")   Pend_ODG.enqueue(pOrd);
     else if (type == "OT")    Pend_OT.enqueue(pOrd);
     else if (type == "OVN")   Pend_OVN.enqueue(pOrd);
@@ -191,6 +192,15 @@ void Restaurant::loadFile(string filename)
             else if (type == "OVC" || type == "OVG" || type == "OVN")
             {
                 input >> Distance;
+            }
+
+            else if (type == "COMBO") {
+                int nChefs, nScooters;
+                input >> Distance >> nChefs >> nScooters;
+                RequestAction* requestAct = new RequestAction(Action_Time, type, ID, Size, Price, 0, 0, false, Distance, nChefs, nScooters);
+                Request_Actions.enqueue(requestAct);
+                Action_Count++;
+                continue;
             }
 
             RequestAction* requestAct = new RequestAction(Action_Time, type, ID, Size, Price, Seats, Duration, CanShare, Distance);

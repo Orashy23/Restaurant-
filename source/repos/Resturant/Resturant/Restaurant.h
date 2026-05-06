@@ -75,6 +75,14 @@ private:
 	
     void assignOneDeliveryOrder(Order* ord, int currentTimestep);
 
+    //COMBO
+    LinkedQueue<Order*> Pend_COMBO; // Highest priority pending
+    LinkedQueue<Order*> RDY_COMBO;  // Highest priority ready
+
+    void assignCOMBOToChefs(int currentTimestep);
+    void assignCOMBODelivery(int currentTimestep);
+
+
 public:
 
     
@@ -130,4 +138,9 @@ public:
 
     void loadFile(string filename);
     void writeOutput(string filename);
+
+    //COMBO
+    LinkedQueue<Order*>* getPend_COMBO() { return &Pend_COMBO; }
+    LinkedQueue<Order*>* getRDY_COMBO() { return &RDY_COMBO; }
+
 };

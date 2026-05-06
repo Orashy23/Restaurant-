@@ -21,8 +21,15 @@ private:
 	Scooter* assignedScooter;
 	Table* assignedTable;
 	Chef* assignedChef; //this is the chef that will prepare the order once finished , it will be set to nullptr;
-	/* this T* are used to track the time taken through each step of the order cycle 
-	 (document page 4 of the project description for visualization) */
+	
+	// COMBO Bonus attributes: 
+	Chef* assignedChefs[4];      // Up to 4 chefs for a COMBO
+	Scooter* assignedScooters[20];  // Assuming a maximum of 20 scooters could be needed for a large delivery order
+	int      numChefsNeeded;
+	int      numScootersNeeded;
+	int      numChefsAssigned;
+	int      numScootersAssigned;
+
 public:
 	Order(int id, string type, int price, int size, int timerequest);
 	int getID();
@@ -60,6 +67,19 @@ public:
 
 	void setChef(Chef* c) { assignedChef = c; }
 	Chef* getChef() { return assignedChef; }
+
+	// COMBO getters/setters
+	void addChef(Chef* c) { if (numChefsAssigned < 4) assignedChefs[numChefsAssigned++] = c; }
+	void addScooter(Scooter* s) { if (numScootersAssigned < 20) assignedScooters[numScootersAssigned++] = s; }
+	Chef* getChefAt(int i) { return (i < numChefsAssigned) ? assignedChefs[i] : nullptr; }
+	Scooter* getScooterAt(int i) { return (i < numScootersAssigned) ? assignedScooters[i] : nullptr; }
+	int getNumChefsAssigned() { return numChefsAssigned; }
+	int getNumScootersAssigned() { return numScootersAssigned; }
+	int getNumChefsNeeded() { return numChefsNeeded; }
+	int getNumScootersNeeded() { return numScootersNeeded; }
+	void setNumChefsNeeded(int n) { numChefsNeeded = n; }
+	void setNumScootersNeeded(int n) { numScootersNeeded = (n < 2) ? 2 : n; } // Forces min 2 scooters
+
 
 	friend ostream& operator<<(ostream& os, Order* order);
 

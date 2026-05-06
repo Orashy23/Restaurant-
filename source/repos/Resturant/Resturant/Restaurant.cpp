@@ -24,8 +24,76 @@ void Restaurant::AddtoPendingList(Order* pOrd)
     else if (type == "OT")    Pend_OT.enqueue(pOrd);
     else if (type == "OVN")   Pend_OVN.enqueue(pOrd);
     else if (type == "OVC")   Pend_OVC_List.enqueue(pOrd);
-    else if (type == "OVG")   Pend_OVG.enqueue(pOrd, pOrd->getPriority());
+    else if (type == "OVG") { 
+        int priority = pOrd->getPrice() + (pOrd->getSize() * 10) - (pOrd->getDistance() / 5);
+        pOrd->setPriority(priority);
+        Pend_OVG.enqueue(pOrd, pOrd->getPriority()); 
+    }
 }
+
+void Restaurant::setorder(Order* pOrd, Chef* chef, int time) {
+    pOrd->setChef(chef);
+    pOrd->setTA(time);
+    int cooktime = ceil((float)pOrd->getSize() / chef->getSpeed());
+    pOrd->setTR(cooktime + time);
+    Cooking_Orders.enqueue(pOrd, -pOrd->getTR());
+    chef->setIsFree(false);
+}
+
+void Restaurant::assignpendingtochef(int currentTimestep) {
+    Chef* chef;
+    Order* pOrd;
+    int priority;
+    while (!Pend_ODG.isEmpty() && !Free_CS.isEmpty()) {
+        Free_CS.dequeue(chef);
+        Pend_ODG.dequeue(pOrd);
+        setorder(pOrd, chef, currentTimestep);
+    }
+    while (!Pend_ODN.isEmpty()&& (!Free_CN.isEmpty() || !Free_CS.isEmpty())) {
+        Pend_ODN.dequeue(pOrd);
+        if (!Free_CN.isEmpty()) {
+            Free_CN.dequeue(chef);
+        }
+        else if (!Free_CS.isEmpty()) {
+            Free_CS.dequeue(chef);
+        }
+        else {
+            break;
+        }
+        setorder(pOrd, chef, currentTimestep);
+
+    }
+    while (!Pend_OT.isEmpty() && !Free_CN.isEmpty()) {
+        Free_CN.dequeue(chef);
+        Pend_OT.dequeue(pOrd);
+        setorder(pOrd, chef, currentTimestep);
+    }
+    while (!Pend_OVG.isEmpty() && !Free_CS.isEmpty()) {
+        Free_CS.dequeue(chef);
+        Pend_OVG.dequeue(pOrd, priority);
+        setorder(pOrd, chef, currentTimestep);
+    }
+    while (!Pend_OVC_List.isEmpty() && (!Free_CN.isEmpty() || !Free_CS.isEmpty())) {
+        Pend_OVC_List.dequeue(pOrd);
+        if (!Free_CN.isEmpty()) {
+            Free_CN.dequeue(chef);
+        }
+        else if (!Free_CS.isEmpty()) {
+            Free_CS.dequeue(chef);
+        }
+        else {
+            break;
+        }
+        setorder(pOrd, chef, currentTimestep);
+    }
+    while (!Pend_OVN.isEmpty() && !Free_CN.isEmpty()) {
+        Free_CN.dequeue(chef);
+        Pend_OVN.dequeue(pOrd);
+        setorder(pOrd, chef, currentTimestep);
+    }
+}
+
+
 
 void Restaurant::ExecuteActions(int currentTimestep)
 {
@@ -495,10 +563,9 @@ void Restaurant::simulate() {
         currentTimestep++;
     }
 
-    // Post-simulation report generation
-    // 
-    // writeOutputFile(outFile, currentTimestep - 1); 
-
+     
+    totalTimesteps = currentTimestep - 1;
+    writeOutput(outFile);
     if (mode == 2) ui.printMsg("Simulation ends, Output file created.");
 }
 
@@ -679,7 +746,41 @@ void Restaurant::writeOutput(string filename)
     output << "Average Tc: " << Avg_Tc << "\n";
     output << "Average Tw: " << Avg_Tw << "\n";
     output << "Average Tserv: " << Avg_Tserv << "\n";
-    // todo : Chef utilization and Scooter utilization needs data from simulation loop
+    int totalChefBusy = 0;
+    Chef* pChef;
+    LinkedQueue<Chef*> tempCN, tempCS;
+    while (Free_CN.dequeue(pChef)) { 
+        totalChefBusy += pChef->getTotalBusyTime();
+        tempCN.enqueue(pChef);
+    }
+    while (Free_CS.dequeue(pChef)) {
+        totalChefBusy += pChef->getTotalBusyTime(); 
+        tempCS.enqueue(pChef);
+    }
+    while (tempCN.dequeue(pChef)) {
+        Free_CN.enqueue(pChef);
+    }
+    while (tempCS.dequeue(pChef)) {
+        Free_CS.enqueue(pChef);
+    }
+    float chefUtil = 0;
+    if (totalTimesteps > 0)
+        chefUtil = totalChefBusy * 100.0f / ((CN_Count + CS_Count) * totalTimesteps);
+    output << "Chef Utilization: " << chefUtil << "%\n";
+
+    int totalScooterBusy = 0;
+    Scooter* pScoot; int sp;
+    priQueue<Scooter*> tempScoot;
+    while (Free_Scooters.dequeue(pScoot, sp)) {
+        totalScooterBusy += pScoot->getTotalBusyTime(); tempScoot.enqueue(pScoot, sp); 
+    }
+    while (tempScoot.dequeue(pScoot, sp)) {
+        Free_Scooters.enqueue(pScoot, sp);
+    }
+    float scootUtil = 0;
+    if (totalTimesteps > 0)
+        scootUtil = totalScooterBusy * 100.0f / (Scotter_Count * totalTimesteps);
+    output << "Scooter Utilization: " << scootUtil << "%\n";
 }
 
 

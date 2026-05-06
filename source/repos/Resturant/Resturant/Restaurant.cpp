@@ -496,6 +496,7 @@ void Restaurant::simulate() {
     }
 
     // Post-simulation report generation
+    // 
     // writeOutputFile(outFile, currentTimestep - 1); 
 
     if (mode == 2) ui.printMsg("Simulation ends, Output file created.");

@@ -12,9 +12,11 @@ public:
     virtual void act(Restaurant* pRes)
     {
         pRes->CancelOrder(orderID);
-        // Restaurant::CancelOrder already handles
-        // checking all 3 lists in the right order
     }
 
+    virtual void print() const
+    {
+        cout << "(X, " << getTime() << ", " << orderID << ")";
+    }
 };
 

@@ -4,6 +4,8 @@
 #include "Order.h"
 #include "Chef.h"
 #include "Scooter.h"
+#include "RequestAction.h"
+#include "CancelAction.h"
 
 using namespace std;
 

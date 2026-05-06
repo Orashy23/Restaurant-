@@ -44,6 +44,10 @@ public:
         pRes->AddtoPendingList(pOrd);
     }
 
-    // Virtual destructor for safe memory cleanup 
+    virtual void print() const
+    {
+        cout << "[" << type << ", " << getTime() << ", " << ID << "]";
+    }
+
     virtual ~RequestAction() {}
 };

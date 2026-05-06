@@ -9,10 +9,17 @@ class Action
 		int time;
 public:
 	Action(int t) { time = t; };
-	virtual void act(Restaurant* pRes) = 0; //pure virtual function makes this class abstract
-	int getTime() {return time;} 
+	virtual void act(Restaurant* pRes) = 0;
+	virtual void print() const = 0;
+	int getTime() const {return time;}
 	~Action() {};
 };
+
+inline ostream& operator<<(ostream& os, Action* a)
+{
+	if (a) a->print();
+	return os;
+}
 
 // test
 

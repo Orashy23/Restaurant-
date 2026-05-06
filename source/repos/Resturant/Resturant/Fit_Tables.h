@@ -13,7 +13,7 @@ public:
         enqueue(t, -(t->getFreeSeats()));
     }
 
-    // Dequeues tables until it finds the tightest fit, then stops searching
+    // Dequeues tables until it finds the tightest fit (best fit), then stops searching
     Table* getBest(int requiredSeats) {
         priQueue<Table*> temp;
         Table* best = nullptr;
@@ -21,10 +21,9 @@ public:
         int p;
 
         while (dequeue(t, p)) {
-            // Because of the negative priority trick, the first one that fits IS the best!
             if (t->getFreeSeats() >= requiredSeats) {
                 best = t;
-                break; // OPTIMIZATION: Stop searching immediately! 
+                break; //Stops searching as we found the best fit for now
             }
             else {
                 // Table is too small. Put it in temp to get it out of the way.
@@ -33,6 +32,7 @@ public:
         }
 
         // Put the smaller tables we skipped over back into the main queue
+		//It will be still sorted correctly as we are using a pri-queue
         while (temp.dequeue(t, p)) {
             enqueue(t, p);
         }
@@ -40,7 +40,6 @@ public:
         return best;
     }
 
-    // Prints the current state of all tables in this queue
     void print() const {
         priNode<Table*>* current = head;
         while (current != nullptr) {

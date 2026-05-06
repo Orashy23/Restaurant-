@@ -10,6 +10,7 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <cmath>
 
 using namespace std;
 
@@ -216,9 +217,7 @@ void Restaurant::loadFile(string filename)
     
 }
 
-// ─────────────────────────────────────────────────────────────
-// Takeaway: OT orders wait exactly 1 timestep after TR, then done.
-// ─────────────────────────────────────────────────────────────
+
 void Restaurant::assignTakeawayOrders(int currentTimestep)
 {
     LinkedQueue<Order*> notReadyYet;
@@ -257,7 +256,7 @@ void Restaurant::assignDineInOrders(int currentTimestep)
         int seats = pOrd->getSeats();
         Table* pt = nullptr;
 
-        // --- Priority 1: try an already-occupied sharable table ---
+        //Priority 1: try an already-occupied sharable table
         pt = Busy_Sharable.getBest(seats);
         if (pt)
         {
@@ -272,7 +271,7 @@ void Restaurant::assignDineInOrders(int currentTimestep)
         }
         else
         {
-            // --- Priority 2: use a brand-new free table ---
+            // Priority 2: use a brand-new free table
             pt = Free_Tables.getBest(seats);
             if (pt)
             {
@@ -304,9 +303,35 @@ void Restaurant::assignDineInOrders(int currentTimestep)
         RDY_OD.enqueue(pOrd);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Delivery: OVC gets priority, then all other OV types.
-// ─────────────────────────────────────────────────────────────
+
+ 
+
+
+
+// Helper function to handle assigning a single delivery order to a scooter
+void Restaurant::assignOneDeliveryOrder(Order* ord, int currentTimestep)
+{
+    Scooter* ps;
+    int sp;
+
+    Free_Scooters.dequeue(ps, sp);
+
+    int tserv = (int)ceil((float)ord->getDistance() / ps->getSpeed());
+
+    ord->setTS(currentTimestep);
+    ord->setTF(currentTimestep + tserv);
+
+    ps->addDistance(ord->getDistance());
+    ps->increaseOderCounter();   // Tracks when maintenance is needed
+    ord->setScooter(ps);
+
+    int returnArrival = ord->getTF() + (int)ceil((float)ord->getDistance() / ps->getSpeed());
+    ps->setReturnTime(returnArrival);
+
+    InServ_Orders.enqueue(ord, -(ord->getTF()));
+}
+
+
 void Restaurant::assignDeliveryOrders(int currentTimestep)
 {
     // Split the single ready-OV list into cold vs. everything else
@@ -322,36 +347,18 @@ void Restaurant::assignDeliveryOrders(int currentTimestep)
             otherOrders.enqueue(pOrd);
     }
 
-    // Helper lambda to assign one order to one scooter
-    auto assignOne = [&](Order* ord)
-        {
-            Scooter* ps; int sp;
-            Free_Scooters.dequeue(ps, sp);
-
-            int tserv = (int)ceil((float)ord->getDistance() / ps->getSpeed());
-            ord->setTS(currentTimestep);
-            ord->setTF(currentTimestep + tserv);
-
-            ps->addDistance(ord->getDistance());
-            ps->increaseOderCounter();   // tracks maintenance threshold
-            ord->setScooter(ps);
-
-            // Negative TF → earliest finisher is at the front of InServ_Orders
-            InServ_Orders.enqueue(ord, -(ord->getTF()));
-        };
-
     // Assign OVC first
     while (!ovcOrders.isEmpty() && !Free_Scooters.isEmpty())
     {
         ovcOrders.dequeue(pOrd);
-        assignOne(pOrd);
+        assignOneDeliveryOrder(pOrd, currentTimestep); 
     }
 
     // Then assign OVN / OVG
     while (!otherOrders.isEmpty() && !Free_Scooters.isEmpty())
     {
         otherOrders.dequeue(pOrd);
-        assignOne(pOrd);
+        assignOneDeliveryOrder(pOrd, currentTimestep); 
     }
 
     // Put any unassigned orders back into the ready list
@@ -359,9 +366,7 @@ void Restaurant::assignDeliveryOrders(int currentTimestep)
     while (otherOrders.dequeue(pOrd)) Ready_OV_List.enqueue(pOrd);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Check every in-service order — finish those whose TF has arrived.
-// ─────────────────────────────────────────────────────────────
+
 void Restaurant::updateInServiceOrders(int currentTimestep)
 {
     int size = InServ_Orders.getCount();
@@ -375,7 +380,6 @@ void Restaurant::updateInServiceOrders(int currentTimestep)
         {
             string type = pOrd->getType();
 
-            // --- Delivery order finished ---
             if (type == "OVN" || type == "OVG" || type == "OVC")
             {
                 Scooter* ps = pOrd->getScooter();
@@ -385,7 +389,6 @@ void Restaurant::updateInServiceOrders(int currentTimestep)
                 // priQueue is max-first, so priority = -returnDist
                 Back_Scooters.enqueue(ps, -returnDist);
             }
-            // --- Dine-in order finished: release the table ---
             else if (type == "ODG" || type == "ODN")
             {
                 Table* pt = pOrd->getTable();
@@ -416,11 +419,9 @@ void Restaurant::updateInServiceOrders(int currentTimestep)
 bool Restaurant::simulationDone() {
    
     return
-        // 1. Check Action Queues
         Request_Actions.isEmpty() &&
         Cancel_Actions.isEmpty() &&
 
-        // 2. Check All Pending Lists (6 lists)
         Pend_ODG.isEmpty() &&
         Pend_ODN.isEmpty() &&
         Pend_OT.isEmpty() &&
@@ -428,24 +429,20 @@ bool Restaurant::simulationDone() {
         Pend_OVG.isEmpty() &&
         Pend_OVC_List.isEmpty() &&
 
-        // 3. Check Kitchen status
         Cooking_Orders.isEmpty() &&
 
-        // 4. Check All Ready Lists (3 lists)
         RDY_OD.isEmpty() &&
         RDY_OT.isEmpty() &&
         Ready_OV_List.isEmpty() &&
 
-        // 5. Check Orders currently in service
         InServ_Orders.isEmpty() &&
 
-        // 6. Check Scooters lifecycle (Returning or Repairing)
         Back_Scooters.isEmpty() &&
         Maint_Scooters.isEmpty();
 }
 
 void Restaurant::updateStatisticsCounters() {
-    // 1. Update busy time for Chefs (They are busy if they have an order in Cooking_Orders)
+
     Order* pOrd;
     int pri;
     priQueue<Order*> tempCookQueue;
@@ -462,7 +459,7 @@ void Restaurant::updateStatisticsCounters() {
         Cooking_Orders.enqueue(pOrd, pri);
     }
 
-    // 2. Update busy time for Scooters currently delivering (in InServ_Orders)
+
     priQueue<Order*> tempInServQueue;
     while (InServ_Orders.dequeue(pOrd, pri)) {
         // Only delivery orders have scooters
@@ -479,7 +476,7 @@ void Restaurant::updateStatisticsCounters() {
         InServ_Orders.enqueue(pOrd, pri);
     }
 
-    // 3. Update busy time for Scooters currently returning (in Back_Scooters)
+
     Scooter* pScooter;
     priQueue<Scooter*> tempBackQueue;
     while (Back_Scooters.dequeue(pScooter, pri)) {

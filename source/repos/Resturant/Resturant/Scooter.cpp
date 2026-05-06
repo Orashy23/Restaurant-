@@ -80,9 +80,7 @@ void Scooter::print()
 		<< " Orders Served: " << ordercounter;
 }
 
-//int Scooter::getTotalDistance() const {
-//	return totalDistance;
-//}
+
 
 int Scooter::getTotalDistance()
 {

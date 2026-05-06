@@ -16,6 +16,19 @@ Order::Order(int id, string type, int price, int size, int timerequest)
 	this->TF = 0;
 	this->assignedScooter = nullptr;
 	this->assignedTable = nullptr;
+
+	this->numChefsNeeded = 1;
+	this->numScootersNeeded = 1;
+	this->numChefsAssigned = 0;
+	this->numScootersAssigned = 0;
+
+	for (int i = 0; i < 4; i++) {
+		assignedChefs[i] = nullptr;
+	}
+	for (int i = 0; i < 20; i++) {
+		assignedScooters[i] = nullptr;
+	}
+
 }
 
 int Order::getID()

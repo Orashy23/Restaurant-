@@ -18,10 +18,13 @@ private:
  //delivery
     int distance;
 
+    int numChefs;     // Combo
+    int numScooters;  // Combo
+
 public:
     
-    RequestAction(int time, string typ, int id, int sz, int prc, int sts, int dur, bool shr, int dist)
-        : Action(time), type(typ), ID(id), size(sz), price(prc), seats(sts), duration(dur), canShare(shr), distance(dist)
+    RequestAction(int time, string typ, int id, int sz, int prc, int sts, int dur, bool shr, int dist, int nChefs = 1, int nScooters = 1)
+        : Action(time), type(typ), ID(id), size(sz), price(prc), seats(sts), duration(dur), canShare(shr), distance(dist), numChefs(nChefs), numScooters(nScooters)
     {
     }
 
@@ -42,6 +45,12 @@ public:
         }
 //resturant control.
         pRes->AddtoPendingList(pOrd);
+     // COMBO
+        if (type == "COMBO") {
+            pOrd->setDistance(distance);
+            pOrd->setNumChefsNeeded(numChefs);
+            pOrd->setNumScootersNeeded(numScooters);
+        }
     }
 
     virtual void print() const

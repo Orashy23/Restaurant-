@@ -135,7 +135,7 @@ void Restaurant::loadFile(string filename)
     int CN, CS, CN_Speed, CS_Speed, S_count, S_speed;
     int Main_Ords, Main_Dur;
     int Table_numbers;
-    int TH, Total_Action;
+    int Total_Action;
 
 
     ifstream input(filename);
@@ -539,7 +539,7 @@ void Restaurant::simulate() {
 
         // Update resource availability before new assignments
         updateScooters(currentTimestep);
-        // assignPendingToChefs(currentTimestep); 
+        assignpendingtochef(currentTimestep);
 
         updateCookingOrders(currentTimestep);
 

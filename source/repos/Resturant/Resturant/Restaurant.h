@@ -75,10 +75,7 @@ private:
 
 	void updateStatisticsCounters(); // Update any counters needed for final report generation 
 
-	void promoteOverwaitOrders(int currentTimestep); //bounus function to promote over-waited orders 
-
-    //bonus :
-    void promoteOverwaitOrders(int currentTimestep);
+	void promoteOverwaitOrders(int currentTimestep);
     priQueue<Order*>* getOverwaitOVG() { return &Overwait_OVG; };
   
 

@@ -334,10 +334,19 @@ void Restaurant::assignOneDeliveryOrder(Order* ord, int currentTimestep)
 
 void Restaurant::assignDeliveryOrders(int currentTimestep)
 {
-    // Split the single ready-OV list into cold vs. everything else
+    Order* pOrd;
+
+    // 1. Assign Overwait OVG orders FIRST (Highest Priority)
+    while (!Overwait_OVG.isEmpty() && !Free_Scooters.isEmpty())
+    {
+        int pri;
+        Overwait_OVG.dequeue(pOrd, pri);
+        assignOneDeliveryOrder(pOrd, currentTimestep);
+    }
+
+    // 2. Split the single ready-OV list into cold vs. everything else
     LinkedQueue<Order*> ovcOrders;
     LinkedQueue<Order*> otherOrders;
-    Order* pOrd;
 
     while (Ready_OV_List.dequeue(pOrd))
     {
@@ -347,18 +356,18 @@ void Restaurant::assignDeliveryOrders(int currentTimestep)
             otherOrders.enqueue(pOrd);
     }
 
-    // Assign OVC first
+    // 3. Assign OVC second
     while (!ovcOrders.isEmpty() && !Free_Scooters.isEmpty())
     {
         ovcOrders.dequeue(pOrd);
-        assignOneDeliveryOrder(pOrd, currentTimestep); 
+        assignOneDeliveryOrder(pOrd, currentTimestep);
     }
 
-    // Then assign OVN / OVG
+    // 4. Then assign normal OVN / OVG last
     while (!otherOrders.isEmpty() && !Free_Scooters.isEmpty())
     {
         otherOrders.dequeue(pOrd);
-        assignOneDeliveryOrder(pOrd, currentTimestep); 
+        assignOneDeliveryOrder(pOrd, currentTimestep);
     }
 
     // Put any unassigned orders back into the ready list
@@ -419,6 +428,10 @@ void Restaurant::updateInServiceOrders(int currentTimestep)
 bool Restaurant::simulationDone() {
    
     return
+
+        //bonus: by the great ghrbr:
+        Overwait_OVG.isEmpty() &&
+
         Request_Actions.isEmpty() &&
         Cancel_Actions.isEmpty() &&
 
@@ -537,6 +550,8 @@ void Restaurant::simulate() {
         // Update resource availability before new assignments
         updateScooters(currentTimestep);
         assignpendingtochef(currentTimestep);
+
+		promoteOverwaitOrders(currentTimestep); // Bonus feature: promote overwaiting OVG orders
 
         updateCookingOrders(currentTimestep);
 

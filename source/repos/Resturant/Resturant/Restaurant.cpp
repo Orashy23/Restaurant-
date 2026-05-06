@@ -549,9 +549,9 @@ void Restaurant::simulate() {
         currentTimestep++;
     }
 
-    // Post-simulation report generation
-    // writeOutputFile(outFile, currentTimestep - 1); 
-
+     
+    totalTimesteps = currentTimestep - 1;
+    writeOutput(outFile);
     if (mode == 2) ui.printMsg("Simulation ends, Output file created.");
 }
 
@@ -732,7 +732,41 @@ void Restaurant::writeOutput(string filename)
     output << "Average Tc: " << Avg_Tc << "\n";
     output << "Average Tw: " << Avg_Tw << "\n";
     output << "Average Tserv: " << Avg_Tserv << "\n";
-    // todo : Chef utilization and Scooter utilization needs data from simulation loop
+    int totalChefBusy = 0;
+    Chef* pChef;
+    LinkedQueue<Chef*> tempCN, tempCS;
+    while (Free_CN.dequeue(pChef)) { 
+        totalChefBusy += pChef->getTotalBusyTime();
+        tempCN.enqueue(pChef);
+    }
+    while (Free_CS.dequeue(pChef)) {
+        totalChefBusy += pChef->getTotalBusyTime(); 
+        tempCS.enqueue(pChef);
+    }
+    while (tempCN.dequeue(pChef)) {
+        Free_CN.enqueue(pChef);
+    }
+    while (tempCS.dequeue(pChef)) {
+        Free_CS.enqueue(pChef);
+    }
+    float chefUtil = 0;
+    if (totalTimesteps > 0)
+        chefUtil = totalChefBusy * 100.0f / ((CN_Count + CS_Count) * totalTimesteps);
+    output << "Chef Utilization: " << chefUtil << "%\n";
+
+    int totalScooterBusy = 0;
+    Scooter* pScoot; int sp;
+    priQueue<Scooter*> tempScoot;
+    while (Free_Scooters.dequeue(pScoot, sp)) {
+        totalScooterBusy += pScoot->getTotalBusyTime(); tempScoot.enqueue(pScoot, sp); 
+    }
+    while (tempScoot.dequeue(pScoot, sp)) {
+        Free_Scooters.enqueue(pScoot, sp);
+    }
+    float scootUtil = 0;
+    if (totalTimesteps > 0)
+        scootUtil = totalScooterBusy * 100.0f / (Scotter_Count * totalTimesteps);
+    output << "Scooter Utilization: " << scootUtil << "%\n";
 }
 
 

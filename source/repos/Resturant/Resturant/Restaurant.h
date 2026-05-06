@@ -15,9 +15,14 @@ class Table;
 class Scooter;
 class Action;
 
+
 class Restaurant
 {
 private:
+
+	int CS_Count;
+	int CN_Count;
+	int Scotter_Count;
 
     //bonus:
     int TH; // Threshold for overwait
@@ -139,4 +144,5 @@ public:
 
 
     void loadFile(string filename);
+    void writeOutput(string filename);
 };

@@ -9,7 +9,7 @@ Order::Order(int id, string type, int price, int size, int timerequest)
 	this->price = price;
 	this->ordersize = size;
 	this->TQ = timerequest;
-	this->priority = size;
+	this->priority = 0;
 	this->TA = 0;
 	this->TR = 0;
 	this->TS = 0;

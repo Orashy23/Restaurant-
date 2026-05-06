@@ -23,6 +23,7 @@ private:
 	int CS_Count;
 	int CN_Count;
 	int Scotter_Count;
+    int totalTimesteps;
 
     //bonus:
     int TH; // Threshold for overwait

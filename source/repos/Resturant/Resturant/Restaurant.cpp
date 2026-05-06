@@ -24,7 +24,11 @@ void Restaurant::AddtoPendingList(Order* pOrd)
     else if (type == "OT")    Pend_OT.enqueue(pOrd);
     else if (type == "OVN")   Pend_OVN.enqueue(pOrd);
     else if (type == "OVC")   Pend_OVC_List.enqueue(pOrd);
-    else if (type == "OVG")   Pend_OVG.enqueue(pOrd, pOrd->getPriority());
+    else if (type == "OVG") { 
+        int priority = pOrd->getPrice() + (pOrd->getSize() * 10) - (pOrd->getDistance() / 5);
+        pOrd->setPriority(priority);
+        Pend_OVG.enqueue(pOrd, pOrd->getPriority()); 
+    }
 }
 
 void Restaurant::setorder(Order* pOrd, Chef* chef, int time) {
@@ -32,23 +36,26 @@ void Restaurant::setorder(Order* pOrd, Chef* chef, int time) {
     pOrd->setTA(time);
     int cooktime = ceil((float)pOrd->getSize() / chef->getSpeed());
     pOrd->setTR(cooktime + time);
-    Cooking_Orders.enqueue(pOrd, pOrd->getTA());
-    chef->setIsFree(NULL);
+    Cooking_Orders.enqueue(pOrd, -pOrd->getTR());
+    chef->setIsFree(false);
 }
 
 void Restaurant::assignpendingtochef(int currentTimestep) {
     Chef* chef;
     Order* pOrd;
-    while (Pend_ODG.peek(pOrd) && Free_CS.dequeue(chef)) {
+    int priority;
+    while (!Pend_ODG.isEmpty() && !Free_CS.isEmpty()) {
+        Free_CS.dequeue(chef);
         Pend_ODG.dequeue(pOrd);
         setorder(pOrd, chef, currentTimestep);
     }
-    while (Pend_ODN.peek(pOrd)) {
-        if (Free_CN.dequeue(chef)) {
-            Pend_ODN.dequeue(pOrd);
+    while (!Pend_ODN.isEmpty()&& (!Free_CN.isEmpty() || !Free_CS.isEmpty())) {
+        Pend_ODN.dequeue(pOrd);
+        if (!Free_CN.isEmpty()) {
+            Free_CN.dequeue(chef);
         }
-        else if (Free_CS.dequeue(chef)) {
-            Pend_ODN.dequeue(pOrd);
+        else if (!Free_CS.isEmpty()) {
+            Free_CS.dequeue(chef);
         }
         else {
             break;
@@ -56,24 +63,31 @@ void Restaurant::assignpendingtochef(int currentTimestep) {
         setorder(pOrd, chef, currentTimestep);
 
     }
-    while (Pend_OT.peek(pOrd) && Free_CN.dequeue(chef)) {
+    while (!Pend_OT.isEmpty() && !Free_CN.isEmpty()) {
+        Free_CN.dequeue(chef);
         Pend_OT.dequeue(pOrd);
         setorder(pOrd, chef, currentTimestep);
     }
-    while (1);
-    while (Pend_OVC_List.peek(pOrd)) {
-        if (Free_CN.dequeue(chef)) {
-            Pend_OVC_List.dequeue(pOrd);
+    while (!Pend_OVG.isEmpty() && !Free_CS.isEmpty()) {
+        Free_CS.dequeue(chef);
+        Pend_OVG.dequeue(pOrd, priority);
+        setorder(pOrd, chef, currentTimestep);
+    }
+    while (!Pend_OVC_List.isEmpty() && (!Free_CN.isEmpty() || !Free_CS.isEmpty())) {
+        Pend_OVC_List.dequeue(pOrd);
+        if (!Free_CN.isEmpty()) {
+            Free_CN.dequeue(chef);
         }
-        else if (Free_CS.dequeue(chef)) {
-            Pend_OVC_List.dequeue(pOrd);
+        else if (!Free_CS.isEmpty()) {
+            Free_CS.dequeue(chef);
         }
         else {
             break;
         }
         setorder(pOrd, chef, currentTimestep);
     }
-    while (Pend_OVN.peek(pOrd) && Free_CN.dequeue(chef)) {
+    while (!Pend_OVN.isEmpty() && !Free_CN.isEmpty()) {
+        Free_CN.dequeue(chef);
         Pend_OVN.dequeue(pOrd);
         setorder(pOrd, chef, currentTimestep);
     }

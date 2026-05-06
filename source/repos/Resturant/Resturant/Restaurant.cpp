@@ -445,6 +445,7 @@ bool Restaurant::simulationDone() {
         Request_Actions.isEmpty() &&
         Cancel_Actions.isEmpty() &&
 
+        Pend_COMBO.isEmpty() &&
         Pend_ODG.isEmpty() &&
         Pend_ODN.isEmpty() &&
         Pend_OT.isEmpty() &&
@@ -454,6 +455,7 @@ bool Restaurant::simulationDone() {
 
         Cooking_Orders.isEmpty() &&
 
+        RDY_COMBO.isEmpty() &&
         RDY_OD.isEmpty() &&
         RDY_OT.isEmpty() &&
         Ready_OV_List.isEmpty() &&

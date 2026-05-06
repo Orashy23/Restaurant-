@@ -14,6 +14,9 @@ private:
 	int returnTime;          // The timestep when this scooter arrives back at the restaurant
 	int maintFinishTime;     // The timestep when it leaves the mechanic
 	int totalBusyTime;
+	int failureprob;
+	bool isbroken = false;
+
 
 
 public:
@@ -42,6 +45,7 @@ public:
 	void incrementTrips();
 	void print();
 	bool needsMaintenance();
+	bool checkfailure();
 	void AfterMaintenance();
 
 	int getTotalBusyTime() const { return totalBusyTime; }

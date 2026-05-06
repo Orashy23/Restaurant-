@@ -574,7 +574,7 @@ void Restaurant::simulate() {
 
         currentTimestep++;
     }
-
+    //comm
      
     totalTimesteps = currentTimestep - 1;
     writeOutput(outFile);

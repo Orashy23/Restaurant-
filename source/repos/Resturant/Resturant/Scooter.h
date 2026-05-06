@@ -44,6 +44,9 @@ public:
 	bool needsMaintenance();
 	void AfterMaintenance();
 
+	int getTotalBusyTime() const { return totalBusyTime; }
+	void setTotalBusyTime(int time) { totalBusyTime = time; }
+
 	
 
 	friend ostream& operator<<(ostream& out, const Scooter* s);

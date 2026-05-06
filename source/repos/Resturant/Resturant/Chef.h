@@ -20,6 +20,8 @@ public:
 	void setIsSpecial(bool is_special);
 	void setSpeed(int speed);
 	void print();
+	int getTotalBusyTime() const { return totalBusyTime; }
+	void setTotalBusyTime(int time) { totalBusyTime = time; }
 	friend ostream& operator<<(ostream& out, const Chef* c);
 };
 

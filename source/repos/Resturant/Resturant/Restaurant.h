@@ -18,6 +18,12 @@ class Action;
 class Restaurant
 {
 private:
+
+    //bonus:
+    int TH; // Threshold for overwait
+    priQueue<Order*> Overwait_OVG; // New bonus list
+
+
     ////////////// 1. Action Lists (2) /////////////
     LinkedQueue<Action*> Request_Actions; // Q actions from file
     LinkedQueue<Action*> Cancel_Actions;  // X actions from file
@@ -62,6 +68,12 @@ private:
     bool simulationDone();
 
 	void updateStatisticsCounters(); // Update any counters needed for final report generation 
+
+	void promoteOverwaitOrders(int currentTimestep); //bounus function to promote over-waited orders 
+
+    //bonus :
+    void promoteOverwaitOrders(int currentTimestep);
+    priQueue<Order*>* getOverwaitOVG() { return &Overwait_OVG; };
   
 
 public:

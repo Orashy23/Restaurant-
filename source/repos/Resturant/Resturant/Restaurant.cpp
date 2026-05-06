@@ -371,9 +371,79 @@ bool Restaurant::simulationDone() {
         Maint_Scooters.isEmpty();
 }
 
-void Restaurant::updateStatisticsCounters()
-{
-    
+void Restaurant::updateStatisticsCounters() {
+    // 1. Update busy time for Chefs (They are busy if they have an order in Cooking_Orders)
+    Order* pOrd;
+    int pri;
+    priQueue<Order*> tempCookQueue;
+
+    while (Cooking_Orders.dequeue(pOrd, pri)) {
+        Chef* assignedChef = pOrd->getChef();
+        if (assignedChef) {
+            assignedChef->setTotalBusyTime(assignedChef->getTotalBusyTime() + 1);
+        }
+        tempCookQueue.enqueue(pOrd, pri);
+    }
+    // Restore the cooking queue
+    while (tempCookQueue.dequeue(pOrd, pri)) {
+        Cooking_Orders.enqueue(pOrd, pri);
+    }
+
+    // 2. Update busy time for Scooters currently delivering (in InServ_Orders)
+    priQueue<Order*> tempInServQueue;
+    while (InServ_Orders.dequeue(pOrd, pri)) {
+        // Only delivery orders have scooters
+        if (pOrd->getType() == "OVC" || pOrd->getType() == "OVG" || pOrd->getType() == "OVN") {
+            Scooter* assignedScooter = pOrd->getScooter();
+            if (assignedScooter) {
+                assignedScooter->setTotalBusyTime(assignedScooter->getTotalBusyTime() + 1);
+            }
+        }
+        tempInServQueue.enqueue(pOrd, pri);
+    }
+    // Restore the in-service queue
+    while (tempInServQueue.dequeue(pOrd, pri)) {
+        InServ_Orders.enqueue(pOrd, pri);
+    }
+
+    // 3. Update busy time for Scooters currently returning (in Back_Scooters)
+    Scooter* pScooter;
+    priQueue<Scooter*> tempBackQueue;
+    while (Back_Scooters.dequeue(pScooter, pri)) {
+        pScooter->setTotalBusyTime(pScooter->getTotalBusyTime() + 1);
+        tempBackQueue.enqueue(pScooter, pri);
+    }
+    // Restore the back scooters queue
+    while (tempBackQueue.dequeue(pScooter, pri)) {
+        Back_Scooters.enqueue(pScooter, pri);
+    }
+}
+
+void Restaurant::promoteOverwaitOrders(int currentTimestep) {
+    Order* pOrd;
+    LinkedQueue<Order*> tempQueue;
+
+    // Scan through all Ready Delivery orders
+    while (Ready_OV_List.dequeue(pOrd)) {
+        // Check if it is an OVG order AND if it has exceeded the threshold (TH)
+        if (pOrd->getType() == "OVG" && (currentTimestep - pOrd->getTR() > TH)) {
+
+            // Calculate priority: higher (currentTimestep - TQ) means served first
+            int priority = currentTimestep - pOrd->getTQ();
+
+            // Move it to the new overwait list
+            Overwait_OVG.enqueue(pOrd, priority);
+        }
+        else {
+            // Not overwait, keep it in the normal ready queue
+            tempQueue.enqueue(pOrd);
+        }
+    }
+
+    // Restore the regular ready list
+    while (tempQueue.dequeue(pOrd)) {
+        Ready_OV_List.enqueue(pOrd);
+    }
 }
 
 void Restaurant::simulate() {

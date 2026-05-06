@@ -27,6 +27,60 @@ void Restaurant::AddtoPendingList(Order* pOrd)
     else if (type == "OVG")   Pend_OVG.enqueue(pOrd, pOrd->getPriority());
 }
 
+void Restaurant::setorder(Order* pOrd, Chef* chef, int time) {
+    pOrd->setChef(chef);
+    pOrd->setTA(time);
+    int cooktime = ceil((float)pOrd->getSize() / chef->getSpeed());
+    pOrd->setTR(cooktime + time);
+    Cooking_Orders.enqueue(pOrd, pOrd->getTA());
+    chef->setIsFree(NULL);
+}
+
+void Restaurant::assignpendingtochef(int currentTimestep) {
+    Chef* chef;
+    Order* pOrd;
+    while (Pend_ODG.peek(pOrd) && Free_CS.dequeue(chef)) {
+        Pend_ODG.dequeue(pOrd);
+        setorder(pOrd, chef, currentTimestep);
+    }
+    while (Pend_ODN.peek(pOrd)) {
+        if (Free_CN.dequeue(chef)) {
+            Pend_ODN.dequeue(pOrd);
+        }
+        else if (Free_CS.dequeue(chef)) {
+            Pend_ODN.dequeue(pOrd);
+        }
+        else {
+            break;
+        }
+        setorder(pOrd, chef, currentTimestep);
+
+    }
+    while (Pend_OT.peek(pOrd) && Free_CN.dequeue(chef)) {
+        Pend_OT.dequeue(pOrd);
+        setorder(pOrd, chef, currentTimestep);
+    }
+    while (1);
+    while (Pend_OVC_List.peek(pOrd)) {
+        if (Free_CN.dequeue(chef)) {
+            Pend_OVC_List.dequeue(pOrd);
+        }
+        else if (Free_CS.dequeue(chef)) {
+            Pend_OVC_List.dequeue(pOrd);
+        }
+        else {
+            break;
+        }
+        setorder(pOrd, chef, currentTimestep);
+    }
+    while (Pend_OVN.peek(pOrd) && Free_CN.dequeue(chef)) {
+        Pend_OVN.dequeue(pOrd);
+        setorder(pOrd, chef, currentTimestep);
+    }
+}
+
+
+
 void Restaurant::ExecuteActions(int currentTimestep)
 {
     Action* pact;

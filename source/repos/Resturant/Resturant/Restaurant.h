@@ -91,6 +91,8 @@ public:
 
     // Core Functions
     void AddtoPendingList(Order* pOrd);
+    void assignpendingtochef(int currentTimestep);
+    void setorder(Order* pOrd, Chef* chef, int time);
     void ExecuteActions(int currentTimestep);
 	void CancelOrder(int id);
     // ==========================================

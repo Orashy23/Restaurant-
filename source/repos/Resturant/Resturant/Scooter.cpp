@@ -3,6 +3,7 @@
 using namespace std;
 #include <string>
 #include "Chef.h"
+#include <cstdlib>
 
 
 
@@ -15,9 +16,12 @@ Scooter::Scooter(int Id, int speed, int maintananceTime, int mainorder)
 	this->ordercounter = 0;
 	this->tripsSinceMaint = 0;
 	this->totalBusyTime = 0;
+	this->failureprob = 20;
 	totalDistance = 0;
 	returnTime = 0;
 	maintFinishTime = 0;
+	isbroken = false;
+	failurechecked = false;
 }
 
 int Scooter::getID()
@@ -72,6 +76,7 @@ bool Scooter::needsMaintenance()
 void Scooter::AfterMaintenance()
 {
 	ordercounter = 0;
+	tripsSinceMaint = 0;
 }
 void Scooter::print()
 {
@@ -82,12 +87,21 @@ void Scooter::print()
 
 bool Scooter::checkfailure() {
 	int r = rand() % 100;
-	return r < breakdownprobability;
+	return r < failureprob;
 }
 
 int Scooter::getTotalDistance()
 {
 	return totalDistance;
+}
+bool Scooter::getisbroken() {
+	return isbroken;
+}
+void Scooter::setfailurecheck(bool check) {
+	failurechecked = check;
+}
+bool Scooter::getfailurecheck() {
+	return failurechecked;
 }
 
 void Scooter::setTotalDistance(int dist) {
@@ -115,11 +129,12 @@ void Scooter::setReturnTime(int time) {
 int Scooter::getMaintFinishTime() {
 	return maintFinishTime;
 }
-
+void Scooter::setisbroken(bool broken) {
+	isbroken = broken;
+}
 void Scooter::setMaintFinishTime(int time) {
 	maintFinishTime = time;
 }
-
 
 ostream& operator<<(ostream& out, const Scooter* s)
 {

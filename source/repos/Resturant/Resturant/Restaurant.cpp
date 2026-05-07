@@ -330,9 +330,6 @@ void Restaurant::assignOneDeliveryOrder(Order* ord, int currentTimestep)
 
     ord->setTS(currentTimestep);
     ord->setTF(currentTimestep + tserv);
-
-    ps->addDistance(ord->getDistance());
-    ps->increaseOderCounter();   // Tracks when maintenance is needed
     ord->setScooter(ps);
 
     int returnArrival = ord->getTF() + (int)ceil((float)ord->getDistance() / ps->getSpeed());
@@ -394,19 +391,60 @@ void Restaurant::updateInServiceOrders(int currentTimestep)
     {
         Order* pOrd; int pri;
         InServ_Orders.dequeue(pOrd, pri);
+        string type = pOrd->getType();
+        if ((type == "OVN" || type == "OVG" || type == "OVC")
+            && pOrd->getTF() > currentTimestep)
+        {
+            Scooter* ss = pOrd->getScooter();
 
+            if (ss && !ss->getisbroken())
+            {
+                if (!ss->getfailurecheck())
+                {
+                    ss->setfailurecheck(true);
+
+                    if (ss->checkfailure())
+                    {
+                        ss->setisbroken(true);
+
+                        ss->setMaintFinishTime(
+                            currentTimestep + ss->getMaintananceTime()
+                        );
+
+                        Maint_Scooters.enqueue(ss);
+
+                        pOrd->setScooter(nullptr);
+
+                        Ready_OV_List.enqueue(pOrd);
+
+                        continue;
+                    }
+                }
+            }
+        }
         if (pOrd->getTF() == currentTimestep)
         {
-            string type = pOrd->getType();
 
             if (type == "OVN" || type == "OVG" || type == "OVC")
             {
                 Scooter* ps = pOrd->getScooter();
-                int returnDist = pOrd->getDistance();
 
-                // Shorter return distance = arrives back sooner = higher priority
-                // priQueue is max-first, so priority = -returnDist
-                Back_Scooters.enqueue(ps, -returnDist);
+                if (ps)
+                {
+                    int returnDist = pOrd->getDistance();
+
+                    int returnTime =
+                        currentTimestep +
+                        ceil((double)returnDist / ps->getSpeed());
+
+                    ps->setReturnTime(returnTime);
+
+                    ps->addDistance(returnDist);
+
+                    ps->increaseOderCounter();
+
+                    Back_Scooters.enqueue(ps, -returnDist);
+                }
             }
             else if (type == "ODG" || type == "ODN")
             {
@@ -651,6 +689,7 @@ void Restaurant::updateScooters(int currentTimestep) {
                 Maint_Scooters.enqueue(pScooter);
             }
             else {
+                pScooter->setfailurecheck(false);
                 // Enqueue with negative total distance for shortest-traveled priority
                 Free_Scooters.enqueue(pScooter, -(pScooter->getTotalDistance()));
             }
@@ -672,6 +711,9 @@ void Restaurant::updateScooters(int currentTimestep) {
     while (Maint_Scooters.dequeue(pScooter)) {
         if (currentTimestep >= pScooter->getMaintFinishTime()) {
             pScooter->AfterMaintenance(); // Resets order counter
+            pScooter->setisbroken(false);
+            pScooter->setfailurecheck(false);
+
             Free_Scooters.enqueue(pScooter, -(pScooter->getTotalDistance()));
         }
         else {

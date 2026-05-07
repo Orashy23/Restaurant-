@@ -1,5 +1,6 @@
 #include "UI.h"
 #include <iostream>
+#include <limits>
 #include "Restaurant.h"
 #include "Order.h"
 #include "Chef.h"
@@ -38,7 +39,8 @@ int UI::getMode()
 	{
 		cout << "/////////////////////\n" << "Entering silent mode\n";
 	}
-	
+
+	cin.ignore(numeric_limits<streamsize>::max(), '\n');
 	return mode;
 }
 
@@ -61,7 +63,6 @@ void UI::printMsg(string msg)
 void UI::waitForClick()
 {
 	cout << "\nPress Enter to move to next timestep...";
-	cin.ignore();
 	cin.get();
 }
 

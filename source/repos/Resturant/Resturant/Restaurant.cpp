@@ -116,16 +116,25 @@ void Restaurant::CancelOrder(int id)
 {
     Order* pOrd;
     if (Pend_OVC_List.Cancel_Order(id, pOrd))    { Cancelled_orders.enqueue(pOrd); return; }
-    else if (Cooking_Orders.CancelOrder(id, pOrd)) 
+    else if (Cooking_Orders.CancelOrder(id, pOrd))
     {
-		// If the order is currently being cooked, we also need to free up the chef
-		Chef* c = pOrd->getChef();
-        if (c) {
-            c->setIsFree(true);
-            if (c->getIsSpecial())
-                Free_CS.enqueue(c);
-            else
-                Free_CN.enqueue(c);
+        if (pOrd->getType() == "COMBO") {
+            for (int i = 0; i < pOrd->getNumChefsAssigned(); i++) {
+                Chef* c = pOrd->getChefAt(i);
+                if (c) {
+                    c->setIsFree(true);
+                    if (c->getIsSpecial()) Free_CS.enqueue(c);
+                    else                   Free_CN.enqueue(c);
+                }
+            }
+        }
+        else {
+            Chef* c = pOrd->getChef();
+            if (c) {
+                c->setIsFree(true);
+                if (c->getIsSpecial()) Free_CS.enqueue(c);
+                else                   Free_CN.enqueue(c);
+            }
         }
         Cancelled_orders.enqueue(pOrd); return;
     }
@@ -399,15 +408,18 @@ void Restaurant::updateInServiceOrders(int currentTimestep)
         {
             string type = pOrd->getType();
 
-            if (type == "OVN" || type == "OVG" || type == "OVC")
+            if (type == "COMBO") {
+                for (int i = 0; i < pOrd->getNumScootersAssigned(); i++) {
+                    Scooter* ps = pOrd->getScooterAt(i);
+                    Back_Scooters.enqueue(ps, -pOrd->getDistance());
+                }
+            }
+            else if (type == "OVN" || type == "OVG" || type == "OVC")
             {
                 Scooter* ps = pOrd->getScooter();
-                int returnDist = pOrd->getDistance();
-
-                // Shorter return distance = arrives back sooner = higher priority
-                // priQueue is max-first, so priority = -returnDist
-                Back_Scooters.enqueue(ps, -returnDist);
+                Back_Scooters.enqueue(ps, -pOrd->getDistance());
             }
+
             else if (type == "ODG" || type == "ODN")
             {
                 Table* pt = pOrd->getTable();
@@ -472,13 +484,22 @@ void Restaurant::updateStatisticsCounters() {
     int pri;
     priQueue<Order*> tempCookQueue;
 
+   
     while (Cooking_Orders.dequeue(pOrd, pri)) {
-        Chef* assignedChef = pOrd->getChef();
-        if (assignedChef) {
-            assignedChef->setTotalBusyTime(assignedChef->getTotalBusyTime() + 1);
+        if (pOrd->getType() == "COMBO") {
+            for (int i = 0; i < pOrd->getNumChefsAssigned(); i++) {
+                Chef* c = pOrd->getChefAt(i);
+                if (c) c->setTotalBusyTime(c->getTotalBusyTime() + 1);
+            }
+        }
+        else {
+            Chef* assignedChef = pOrd->getChef();
+            if (assignedChef)
+                assignedChef->setTotalBusyTime(assignedChef->getTotalBusyTime() + 1);
         }
         tempCookQueue.enqueue(pOrd, pri);
     }
+
     // Restore the cooking queue
     while (tempCookQueue.dequeue(pOrd, pri)) {
         Cooking_Orders.enqueue(pOrd, pri);
@@ -488,12 +509,20 @@ void Restaurant::updateStatisticsCounters() {
     priQueue<Order*> tempInServQueue;
     while (InServ_Orders.dequeue(pOrd, pri)) {
         // Only delivery orders have scooters
-        if (pOrd->getType() == "OVC" || pOrd->getType() == "OVG" || pOrd->getType() == "OVN") {
+
+        string t = pOrd->getType();
+        if (t == "OVC" || t == "OVG" || t == "OVN") {
             Scooter* assignedScooter = pOrd->getScooter();
-            if (assignedScooter) {
+            if (assignedScooter)
                 assignedScooter->setTotalBusyTime(assignedScooter->getTotalBusyTime() + 1);
+        }
+        else if (t == "COMBO") {
+            for (int i = 0; i < pOrd->getNumScootersAssigned(); i++) {
+                Scooter* s = pOrd->getScooterAt(i);
+                if (s) s->setTotalBusyTime(s->getTotalBusyTime() + 1);
             }
         }
+
         tempInServQueue.enqueue(pOrd, pri);
     }
     // Restore the in-service queue
@@ -561,6 +590,7 @@ void Restaurant::simulate() {
 
         // Update resource availability before new assignments
         updateScooters(currentTimestep);
+        assignCOMBOToChefs(currentTimestep);
         assignpendingtochef(currentTimestep);
 
 		promoteOverwaitOrders(currentTimestep); // Bonus feature: promote overwaiting OVG orders
@@ -568,6 +598,7 @@ void Restaurant::simulate() {
         updateCookingOrders(currentTimestep);
 
         // Execute stage 2 assignments
+        assignCOMBODelivery(currentTimestep);
         assignTakeawayOrders(currentTimestep);
         assignDineInOrders(currentTimestep);
         assignDeliveryOrders(currentTimestep);
@@ -601,23 +632,34 @@ void Restaurant::updateCookingOrders(int currentTimestep) {
     int pri;
 
     while (Cooking_Orders.dequeue(pOrd, pri)) {
+      
         if (currentTimestep >= pOrd->getTR()) { // Order is ready
-            Chef* pChef = pOrd->getChef();
-            pChef->setIsFree(true);
+            string type = pOrd->getType();
 
-            // Return chef to correct free list
-            if (pChef->getIsSpecial()) {
-                Free_CS.enqueue(pChef);
+            // FREE CHEFS LOGIC
+            if (type == "COMBO") {
+                for (int i = 0; i < pOrd->getNumChefsAssigned(); i++) {
+                    Chef* pChef = pOrd->getChefAt(i);
+                    pChef->setIsFree(true);
+                    if (pChef->getIsSpecial()) Free_CS.enqueue(pChef);
+                    else Free_CN.enqueue(pChef);
+                }
             }
             else {
-                Free_CN.enqueue(pChef);
+                Chef* pChef = pOrd->getChef();
+                pChef->setIsFree(true);
+                if (pChef->getIsSpecial()) Free_CS.enqueue(pChef);
+                else Free_CN.enqueue(pChef);
             }
 
-            // Route order to correct ready list
-            string type = pOrd->getType();
-            if (type == "ODG" || type == "ODN") {
+            // ROUTE ORDER LOGIC
+            if (type == "COMBO") {
+                RDY_COMBO.enqueue(pOrd);
+            }
+            else if (type == "ODG" || type == "ODN") {
                 RDY_OD.enqueue(pOrd);
             }
+
             else if (type == "OT") {
                 RDY_OT.enqueue(pOrd);
             }
@@ -697,7 +739,7 @@ void Restaurant::writeOutput(string filename)
     ofstream output(filename);
     int pri;
     int Total_Order = 0;
-    int ODG = 0, ODN = 0, OT = 0, OVN = 0, OVC = 0, OVG = 0;
+    int ODG = 0, ODN = 0, OT = 0, OVN = 0, OVC = 0, OVG = 0 , COMBO = 0;
     int Total_CS = 0;
     int Total_CN = 0;
     int Scotters = 0;
@@ -744,6 +786,9 @@ void Restaurant::writeOutput(string filename)
         else if (type == "OVG") {
             OVG++;
         }
+        else if (type == "COMBO") {
+            COMBO++;
+        }
 
         Avg_Ti += Ti;
         Avg_Tc += Tc;
@@ -760,7 +805,7 @@ void Restaurant::writeOutput(string filename)
 
     output << "Total Orders: " << Total_Order << "\n";
     output << "ODG: " << ODG << ", ODN: " << ODN << ", OT: " << OT << ", OVN: " << OVN
-        << ", OVC: " << OVC << ", OVG: " << OVG << "\n";
+        << ", OVC: " << OVC << ", OVG: " << OVG << ", COMBO: " << COMBO << "\n";
     output << "Total Chefs: " << CN_Count + CS_Count << "\n";
     output << "CS: " << CS_Count << " CN: " << CN_Count << "\n";
     output << "Total Scooters: " << Scotter_Count << "\n";
@@ -815,6 +860,95 @@ void Restaurant::writeOutput(string filename)
 
 
 
+//COMBO LOGIC
+
+
+void Restaurant::assignCOMBOToChefs(int currentTimestep) {
+    LinkedQueue<Order*> unassigned;
+    Order* pOrd;
+
+    while (Pend_COMBO.dequeue(pOrd)) {
+        int needed = pOrd->getNumChefsNeeded();
+        int totalAvailable = Free_CS.getcount() + Free_CN.getcount();
+
+        if (Free_CS.isEmpty() || totalAvailable < needed) {
+            unassigned.enqueue(pOrd);
+            continue;
+        }
+
+        Chef* c;
+        Free_CS.dequeue(c);
+        pOrd->addChef(c);
+        c->setIsFree(false);
+        int totalSpeed = c->getSpeed();
+
+        for (int i = 1; i < needed; i++) {
+            if (!Free_CN.isEmpty()) Free_CN.dequeue(c);
+            else Free_CS.dequeue(c);
+
+            pOrd->addChef(c);
+            c->setIsFree(false);
+            totalSpeed += c->getSpeed();
+        }
+
+        pOrd->setTA(currentTimestep);
+        int cookTime = (int)ceil((float)pOrd->getSize() / totalSpeed);
+        pOrd->setTR(currentTimestep + cookTime);
+
+        Cooking_Orders.enqueue(pOrd, -(pOrd->getTR()) - 1000);
+    }
+    while (unassigned.dequeue(pOrd)) Pend_COMBO.enqueue(pOrd);
+}
+
+
+
+
+void Restaurant::assignCOMBODelivery(int currentTimestep) {
+    LinkedQueue<Order*> unassigned;
+    Order* pOrd;
+
+    while (RDY_COMBO.dequeue(pOrd)) {
+        int needed = pOrd->getNumScootersNeeded();
+        if (needed < 2) needed = 2; // Failsafe
+
+        if (Free_Scooters.getCount() < needed) {
+            unassigned.enqueue(pOrd);
+            continue;
+        }
+
+        int slowestSpeed = 999999;
+
+        for (int i = 0; i < needed; i++) {
+            Scooter* ps; int sp;
+            Free_Scooters.dequeue(ps, sp);
+
+            ps->addDistance(pOrd->getDistance());
+            ps->increaseOderCounter();
+            pOrd->addScooter(ps);
+
+            if (ps->getSpeed() < slowestSpeed) slowestSpeed = ps->getSpeed();
+        }
+
+        int tserv = (int)ceil((float)pOrd->getDistance() / slowestSpeed);
+        pOrd->setTS(currentTimestep);
+        pOrd->setTF(currentTimestep + tserv);
+
+        for (int i = 0; i < pOrd->getNumScootersAssigned(); i++) {
+            Scooter* s = pOrd->getScooterAt(i);
+            int returnArrival = pOrd->getTF() + (int)ceil((float)pOrd->getDistance() / s->getSpeed());
+            s->setReturnTime(returnArrival);
+        }
+
+        InServ_Orders.enqueue(pOrd, -(pOrd->getTF()));
+    }
+    while (unassigned.dequeue(pOrd)) RDY_COMBO.enqueue(pOrd);
+}
+
+
+
+
+
+
 
 
 
@@ -833,4 +967,7 @@ Restaurant::~Restaurant()
     while (Ready_OV_List.dequeue(pOrd))       delete pOrd;
     while (Cancelled_orders.dequeue(pOrd))    delete pOrd;
     while (Finished_Orders.pop(pOrd))         delete pOrd;
+    while (Pend_COMBO.dequeue(pOrd))          delete pOrd;
+    while (RDY_COMBO.dequeue(pOrd))           delete pOrd;
+
 }

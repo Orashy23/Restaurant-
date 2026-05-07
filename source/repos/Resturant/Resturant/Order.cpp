@@ -16,6 +16,7 @@ Order::Order(int id, string type, int price, int size, int timerequest)
 	this->TF = 0;
 	this->assignedScooter = nullptr;
 	this->assignedTable = nullptr;
+	this->assignedChef = nullptr;
 
 	this->numChefsNeeded = 1;
 	this->numScootersNeeded = 1;

@@ -17,7 +17,7 @@ using namespace std;
 Restaurant::Restaurant()
 {}
 
-void Restaurant::AddtoPendingList(Order* pOrd)//orashy
+void Restaurant::AddtoPendingList(Order* pOrd)
 {
     string type = pOrd->getType();
     if (type == "COMBO") Pend_COMBO.enqueue(pOrd);
@@ -33,7 +33,7 @@ void Restaurant::AddtoPendingList(Order* pOrd)//orashy
     }
 }
 
-void Restaurant::setorder(Order* pOrd, Chef* chef, int time) {//salama
+void Restaurant::setorder(Order* pOrd, Chef* chef, int time) {
     pOrd->setChef(chef);
     pOrd->setTA(time);
     int cooktime = ceil((float)pOrd->getSize() / chef->getSpeed());
@@ -42,7 +42,7 @@ void Restaurant::setorder(Order* pOrd, Chef* chef, int time) {//salama
     chef->setIsFree(false);
 }
 
-void Restaurant::assignpendingtochef(int currentTimestep) {//salama
+void Restaurant::assignpendingtochef(int currentTimestep) {
     Chef* chef;
     Order* pOrd;
     int priority;
@@ -97,7 +97,7 @@ void Restaurant::assignpendingtochef(int currentTimestep) {//salama
 
 
 
-void Restaurant::ExecuteActions(int currentTimestep)//gharbawy
+void Restaurant::ExecuteActions(int currentTimestep)
 {
     Action* pact;
     while (Request_Actions.peek(pact) && pact->getTime() == currentTimestep) {
@@ -112,7 +112,7 @@ void Restaurant::ExecuteActions(int currentTimestep)//gharbawy
     }
 }
 
-void Restaurant::CancelOrder(int id)//salama
+void Restaurant::CancelOrder(int id)
 {
     Order* pOrd;
     if (Pend_OVC_List.Cancel_Order(id, pOrd))    { Cancelled_orders.enqueue(pOrd); return; }
@@ -141,7 +141,7 @@ void Restaurant::CancelOrder(int id)//salama
     else if (Ready_OV_List.CancelOrder(id, pOrd))  { Cancelled_orders.enqueue(pOrd); return; }
 }
 
-void Restaurant::loadFile(string filename)//joe
+void Restaurant::loadFile(string filename)
 {
     int CN, CS, CN_Speed, CS_Speed, S_count, S_speed;
     int Main_Ords, Main_Dur;
@@ -237,7 +237,7 @@ void Restaurant::loadFile(string filename)//joe
 }
 
 
-void Restaurant::assignTakeawayOrders(int currentTimestep)//orashy
+void Restaurant::assignTakeawayOrders(int currentTimestep)
 {
     LinkedQueue<Order*> notReadyYet;
     Order* pOrd;
@@ -262,10 +262,7 @@ void Restaurant::assignTakeawayOrders(int currentTimestep)//orashy
         RDY_OT.enqueue(pOrd);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Dine-in: try sharing first, then free tables. Best-fit always.
-// ─────────────────────────────────────────────────────────────
-void Restaurant::assignDineInOrders(int currentTimestep)//orashy
+void Restaurant::assignDineInOrders(int currentTimestep)
 {
     LinkedQueue<Order*> unassigned;
     Order* pOrd;
@@ -328,7 +325,7 @@ void Restaurant::assignDineInOrders(int currentTimestep)//orashy
 
 
 // Helper function to handle assigning a single delivery order to a scooter
-void Restaurant::assignOneDeliveryOrder(Order* ord, int currentTimestep)//salama & orashy
+void Restaurant::assignOneDeliveryOrder(Order* ord, int currentTimestep)
 {
     Scooter* ps;
     int sp;
@@ -348,7 +345,7 @@ void Restaurant::assignOneDeliveryOrder(Order* ord, int currentTimestep)//salama
 }
 
 
-void Restaurant::assignDeliveryOrders(int currentTimestep)//orashy
+void Restaurant::assignDeliveryOrders(int currentTimestep)
 {
     Order* pOrd;
 
@@ -392,7 +389,7 @@ void Restaurant::assignDeliveryOrders(int currentTimestep)//orashy
 }
 
 
-void Restaurant::updateInServiceOrders(int currentTimestep)//orashy & salama
+void Restaurant::updateInServiceOrders(int currentTimestep)
 {
     int size = InServ_Orders.getCount();
 
@@ -488,7 +485,7 @@ void Restaurant::updateInServiceOrders(int currentTimestep)//orashy & salama
 }
 
 // Check if all queues are empty // if the simulation is done or not
-bool Restaurant::simulationDone() {//gharbawy
+bool Restaurant::simulationDone() {
    
     return
 
@@ -519,7 +516,7 @@ bool Restaurant::simulationDone() {//gharbawy
         Maint_Scooters.isEmpty();
 }
 
-void Restaurant::updateStatisticsCounters() {//gharbawy & orashy
+void Restaurant::updateStatisticsCounters() {
 
     Order* pOrd;
     int pri;
@@ -584,7 +581,7 @@ void Restaurant::updateStatisticsCounters() {//gharbawy & orashy
     }
 }
 
-void Restaurant::promoteOverwaitOrders(int currentTimestep) {//gharbawy
+void Restaurant::promoteOverwaitOrders(int currentTimestep) {
     Order* pOrd;
     LinkedQueue<Order*> tempQueue;
 
@@ -611,7 +608,7 @@ void Restaurant::promoteOverwaitOrders(int currentTimestep) {//gharbawy
     }
 }
 
-void Restaurant::simulate() {//gharbawy
+void Restaurant::simulate() {
     UI ui;
     string inFile, outFile;
 
@@ -631,7 +628,7 @@ void Restaurant::simulate() {//gharbawy
 
         // Update resource availability before new assignments
         updateScooters(currentTimestep);
-        assignCOMBOToChefs(currentTimestep);//not me ORASHY!
+        assignCOMBOToChefs(currentTimestep);
         assignpendingtochef(currentTimestep);
 
 		promoteOverwaitOrders(currentTimestep); // Bonus feature: promote overwaiting OVG orders
@@ -639,7 +636,7 @@ void Restaurant::simulate() {//gharbawy
         updateCookingOrders(currentTimestep);
 
         // Execute stage 2 assignments
-		assignCOMBODelivery(currentTimestep);//not me ORASHY!
+        assignCOMBODelivery(currentTimestep);
         assignTakeawayOrders(currentTimestep);
         assignDineInOrders(currentTimestep);
         assignDeliveryOrders(currentTimestep);
@@ -660,14 +657,14 @@ void Restaurant::simulate() {//gharbawy
     }
     //comm
      
-	totalTimesteps = currentTimestep - 1;//because we increment at the end of the loop, we need to subtract 1 to get the actual last timestep
+    totalTimesteps = currentTimestep - 1;
     writeOutput(outFile);
     if (mode == 2) ui.printMsg("Simulation ends, Output file created.");
 }
 
 
 // Move finished cooking orders to ready lists and free chefs
-void Restaurant::updateCookingOrders(int currentTimestep) { //gharbawy
+void Restaurant::updateCookingOrders(int currentTimestep) {
     priQueue<Order*> tempQueue;
     Order* pOrd;
     int pri;
@@ -721,7 +718,7 @@ void Restaurant::updateCookingOrders(int currentTimestep) { //gharbawy
 }
 
 // Manage returning and maintenance scooters
-void Restaurant::updateScooters(int currentTimestep) {//gharbawy
+void Restaurant::updateScooters(int currentTimestep) {
     priQueue<Scooter*> tempBack;
     Scooter* pScooter;
     int pri;
@@ -772,7 +769,7 @@ void Restaurant::updateScooters(int currentTimestep) {//gharbawy
         Maint_Scooters.enqueue(pScooter);
     }
 }
-void Restaurant::writeOutput(string filename)//joe
+void Restaurant::writeOutput(string filename)
 {
     priQueue<Order*> Descending_TF;
     Order* ord;
@@ -908,7 +905,7 @@ void Restaurant::writeOutput(string filename)//joe
 //COMBO LOGIC
 
 
-void Restaurant::assignCOMBOToChefs(int currentTimestep) {//orashy
+void Restaurant::assignCOMBOToChefs(int currentTimestep) {
     LinkedQueue<Order*> unassigned;
     Order* pOrd;
 
@@ -948,7 +945,7 @@ void Restaurant::assignCOMBOToChefs(int currentTimestep) {//orashy
 
 
 
-void Restaurant::assignCOMBODelivery(int currentTimestep) {//orashy
+void Restaurant::assignCOMBODelivery(int currentTimestep) {
     LinkedQueue<Order*> unassigned;
     Order* pOrd;
 

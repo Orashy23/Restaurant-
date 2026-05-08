@@ -14,7 +14,7 @@ private:
 	int returnTime;          // The timestep when this scooter arrives back at the restaurant
 	int maintFinishTime;     // The timestep when it leaves the mechanic
 	int totalBusyTime;
-	int failureprob=20;
+	int failureprob=10;
 	bool isbroken = false;
 	bool failurechecked=false;
 

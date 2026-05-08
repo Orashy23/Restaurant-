@@ -262,9 +262,6 @@ void Restaurant::assignTakeawayOrders(int currentTimestep)
         RDY_OT.enqueue(pOrd);
 }
 
-// ─────────────────────────────────────────────────────────────
-// Dine-in: try sharing first, then free tables. Best-fit always.
-// ─────────────────────────────────────────────────────────────
 void Restaurant::assignDineInOrders(int currentTimestep)
 {
     LinkedQueue<Order*> unassigned;

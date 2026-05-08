@@ -718,7 +718,7 @@ void Restaurant::updateCookingOrders(int currentTimestep) {//gharbawy
 }
 
 // Manage returning and maintenance scooters
-void Restaurant::updateScooters(int currentTimestep) {//gharbawy
+void Restaurant::updateScooters(int currentTimestep) {//gharbawy & salama
     priQueue<Scooter*> tempBack;
     Scooter* pScooter;
     int pri;
